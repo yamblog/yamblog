@@ -1,0 +1,48 @@
+{
+  "name": "@yamblog/next",
+  "version": "1.0.1",
+  "description": "Next.js adapter for @yamblog/core",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "rm -rf ./dist && bun build ./src/index.ts --outdir ./dist --target node --external @vercel/og && tsc -p tsconfig.json --emitDeclarationOnly",
+    "test": "bun test",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src/"
+  },
+  "dependencies": {
+    "@yamblog/core": "^1.0.1",
+    "react-markdown": "^9.0.0",
+    "@vercel/og": "^0.6.0"
+  },
+  "peerDependencies": {
+    "next": ">=14.0.0",
+    "react": ">=18.0.0",
+    "react-dom": ">=18.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.0.0",
+    "@types/node": "^25.0.0",
+    "typescript": "^6.0.0"
+  },
+  "keywords": [
+    "nextjs",
+    "blog",
+    "markdown",
+    "yamblog"
+  ],
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "license": "MIT"
+}

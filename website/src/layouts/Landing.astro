@@ -1,0 +1,67 @@
+---
+interface Props {
+  title?: string;
+  description?: string;
+}
+const {
+  title = 'Yamblog — The markdown blog engine for the agentic era',
+  description = 'File-based, type-safe, framework-agnostic blog engine for Next.js, Astro, and React.',
+} = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{title}</title>
+  <meta name="description" content={description} />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <!-- Dark mode — must run sync to prevent flash of wrong theme -->
+  <script is:inline>
+    (function () {
+      var t = localStorage.getItem('starlight-theme') || 'dark';
+      document.documentElement.dataset.theme = t;
+    })();
+  </script>
+</head>
+<body>
+  <slot />
+
+  <script>
+    // ── Theme toggle ──
+    document.addEventListener('click', (e) => {
+      if (!(e.target as Element).closest('[data-theme-toggle]')) return;
+      const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+      document.documentElement.dataset.theme = next;
+      localStorage.setItem('starlight-theme', next);
+    });
+
+    // ── Code tabs ──
+    document.addEventListener('click', (e) => {
+      const tab = (e.target as Element).closest<HTMLElement>('[data-tab]');
+      if (!tab) return;
+      const shell = tab.closest('.code-shell')!;
+      const id = tab.dataset.tab!;
+      shell.querySelectorAll<HTMLElement>('[data-tab]').forEach(t => t.classList.toggle('active', t.dataset.tab === id));
+      shell.querySelectorAll<HTMLElement>('[data-panel]').forEach(p => { p.hidden = p.dataset.panel !== id; });
+      const fileEl = shell.querySelector<HTMLElement>('.code-file');
+      if (fileEl) fileEl.textContent = tab.dataset.file ?? '';
+    });
+
+    // ── Copy button ──
+    document.addEventListener('click', (e) => {
+      const btn = (e.target as Element).closest<HTMLElement>('[data-copy]');
+      if (!btn) return;
+      navigator.clipboard?.writeText(btn.dataset.copy!);
+      btn.classList.add('copied');
+      btn.textContent = '✓ Copied';
+      setTimeout(() => { btn.classList.remove('copied'); btn.innerHTML = btn.dataset.label ?? 'Copy'; }, 1400);
+    });
+  </script>
+</body>
+</html>
+
+<style is:global>
+  @import '../styles/landing.css';
+</style>

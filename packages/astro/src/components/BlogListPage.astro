@@ -1,0 +1,74 @@
+---
+import type { Post } from '@yamblog/core';
+
+interface Props {
+  posts: Post[];
+  /** Current search query string */
+  query?: string;
+  /** Base path for blog links. Default: "/blog" */
+  basePath?: string;
+  title?: string;
+}
+
+const { posts, query, basePath = '/blog', title = 'Blog' } = Astro.props;
+---
+
+<main class="max-w-2xl mx-auto px-4 py-16">
+  <h1 class="text-3xl font-bold mb-6">{title}</h1>
+
+  <form method="GET" class="mb-10 flex gap-2">
+    <input
+      name="q"
+      value={query}
+      placeholder="Search posts..."
+      class="flex-1 border border-zinc-300 rounded px-3 py-1.5 text-sm bg-transparent focus:outline-none focus:ring-2 focus:ring-zinc-400"
+    />
+    <button
+      type="submit"
+      class="px-3 py-1.5 text-sm rounded bg-zinc-900 text-white hover:opacity-80"
+    >
+      Search
+    </button>
+    {query && (
+      <a
+        href={basePath}
+        class="px-3 py-1.5 text-sm rounded border border-zinc-300 hover:opacity-80"
+      >
+        Clear
+      </a>
+    )}
+  </form>
+
+  {query && (
+    <p class="text-sm text-zinc-500 mb-6">
+      {posts.length} result{posts.length !== 1 ? 's' : ''} for &ldquo;{query}&rdquo;
+    </p>
+  )}
+
+  {posts.length === 0 && (
+    <p class="text-zinc-500 text-sm">No posts found.</p>
+  )}
+
+  <ul class="flex flex-col gap-10">
+    {posts.map((post) => (
+      <li>
+        <a href={`${basePath}/${post.slug}`} class="group">
+          <h2 class="text-xl font-semibold group-hover:underline">{post.title}</h2>
+        </a>
+        <p class="text-sm text-zinc-500 mt-1">
+          {post.date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+          &middot; {post.readingTime} min read
+          &middot; {post.author}
+        </p>
+        {post.excerpt && (
+          <p class="mt-2 text-zinc-700">{post.excerpt}</p>
+        )}
+        <div class="mt-2 flex gap-2 flex-wrap">
+          {post.tags.map((tag) => (
+            <span class="text-xs bg-zinc-100 px-2 py-0.5 rounded">{tag}</span>
+          ))}
+        </div>
+      </li>
+    ))}
+  </ul>
+</main>

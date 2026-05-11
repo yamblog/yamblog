@@ -1,0 +1,66 @@
+---
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+
+const orbitHtml = `
+  <div class="nf-orbit" aria-hidden="true">
+    <div class="nf-orbit__frame">
+      <span class="nf-orbit__badge">404</span>
+      <div class="nf-orbit__ring"></div>
+      <div class="nf-orbit__core">
+        <span class="nf-orbit__core-mark">Y</span>
+      </div>
+      <div class="nf-orbit__paths">
+        <span>/docs/ghost-route</span>
+        <span>/blog/null-slug</span>
+        <span>/packages/missing</span>
+      </div>
+    </div>
+  </div>
+`;
+---
+
+<StarlightPage
+  frontmatter={{
+    title: '404',
+    description: 'The page you requested does not map to a Yamblog doc, blog post, or generated route.',
+    template: 'splash',
+    editUrl: false,
+    pagefind: false,
+    hero: {
+      title: 'Lost in the content graph.',
+      tagline:
+        'That URL did not resolve to a markdown file, a generated page, or a valid docs route. The engine is fine. The path is not.',
+      image: { html: orbitHtml },
+      actions: [
+        { text: 'Start Here', link: '/getting-started/', variant: 'primary' },
+        { text: 'Homepage', link: '/', variant: 'secondary' },
+        { text: 'Blog', link: '/blog/', variant: 'minimal' },
+      ],
+    },
+  }}
+>
+  <div class="not-found-grid">
+    <a class="not-found-card" href="/getting-started/">
+      <span class="not-found-card__eyebrow">Fastest Recovery</span>
+      <strong>Getting Started</strong>
+      <p>Install the package, wire a loader, and render your first posts.</p>
+    </a>
+
+    <a class="not-found-card" href="/architecture/">
+      <span class="not-found-card__eyebrow">If You Were Digging Deeper</span>
+      <strong>Architecture</strong>
+      <p>See how the core package, framework adapters, and content pipeline fit together.</p>
+    </a>
+
+    <a class="not-found-card" href="/blog/">
+      <span class="not-found-card__eyebrow">Need Something Real</span>
+      <strong>Example Blog</strong>
+      <p>Browse the in-site posts and generated routes that actually exist.</p>
+    </a>
+  </div>
+
+  <p>
+    If you followed an old link, the docs now live under the <code>website/</code> Starlight app and
+    the canonical guides are the pages linked above.
+  </p>
+</StarlightPage>

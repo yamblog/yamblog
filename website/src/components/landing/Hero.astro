@@ -1,0 +1,147 @@
+---
+// Token helpers — renders highlighted code spans server-side
+const k = (t: string) => `<span class="tk-k">${t}</span>`;
+const s = (t: string) => `<span class="tk-s">${t}</span>`;
+const f = (t: string) => `<span class="tk-f">${t}</span>`;
+const c = (t: string) => `<span class="tk-c">${t}</span>`;
+
+type Line = { html: string; hl?: boolean };
+const line = (html: string, hl = false): Line => ({ html, hl });
+const empty = (): Line => line('');
+
+// Tab 1 — defineBlog (lib/blog.ts)
+const tab1: Line[] = [
+  line(`${k('import')} { ${f('defineBlog')} } ${k('from')} ${s("'@yamblog/core'")};`),
+  empty(),
+  line(`${c('// Zero-config — siteUrl auto-detected from env.')}`),
+  line(`${k('export const')} blog = ${f('defineBlog')}(${s("'content/posts'")});`),
+  empty(),
+  line(`${c('// Or with a custom path and site URL:')}`),
+  line(`${k('export const')} blog = ${f('defineBlog')}(${s("'content/posts'")}, ${s("'https://my-site.com'")});`),
+];
+
+// Tab 2 — Query API (app/page.tsx)
+const tab2: Line[] = [
+  line(`${c('// Type-safe query API — no database, just files.')}`),
+  line(`${k('const')} posts   = ${k('await')} blog.${f('getPosts')}();`),
+  line(`${k('const')} post    = ${k('await')} blog.${f('getPostBySlug')}(${s("'hello-world'")});`),
+  line(`${k('const')} tagged  = ${k('await')} blog.${f('getPostsByTag')}(${s("'typescript'")});`),
+  line(`${k('const')} related = ${k('await')} blog.${f('getRelatedPosts')}(${s("'hello-world'")});`),
+  empty(),
+  line(`${c('// Stable foreign key — wire into comments, analytics, anything.')}`),
+  line(`post.id; ${c('// → "blog-hello-world"')}`),
+  empty(),
+  line(`${c('// Ship-ready generation — siteUrl propagates from defineBlog.')}`),
+  line(`${k('const')} rss     = ${k('await')} blog.${f('generateRss')}();`),
+  line(`${k('const')} sitemap = ${k('await')} blog.${f('generateSitemap')}();`),
+];
+
+// Tab 3 — Next.js (app/blog/[slug]/page.tsx)
+const tab3: Line[] = [
+  line(`${c('// app/blog/[slug]/page.tsx')}`),
+  line(`${k('import')} { ${f('BlogPostPage')}, ${f('generatePostMetadata')} } ${k('from')} ${s("'@yamblog/next'")};`, true),
+  line(`${k('import')} { blog } ${k('from')} ${s("'@/lib/blog'")};`),
+  empty(),
+  line(`${k('export async function')} ${f('generateMetadata')}({ params }) {`),
+  line(`  ${k('const')} post = ${k('await')} blog.${f('getPostBySlug')}(params.slug);`),
+  line(`  ${k('return')} ${f('generatePostMetadata')}(post, { siteName: ${s("'My Blog'")} });`),
+  line(`}`),
+  empty(),
+  line(`${c('// app/feed.xml/route.ts')}`),
+  line(`${k('export const')} GET = ${f('createRssHandler')}(blog, { title: ${s("'My Blog'")} });`, true),
+];
+
+const tabs = [
+  { id: 'define', label: 'defineBlog', file: 'lib/blog.ts',            lines: tab1 },
+  { id: 'query',  label: 'Query',      file: 'app/page.tsx',           lines: tab2 },
+  { id: 'next',   label: 'Next.js',    file: 'app/blog/[slug]/page.tsx', lines: tab3 },
+];
+const INSTALL = 'npm install @yamblog/core @yamblog/next';
+---
+
+<section class="hero">
+  <div class="container hero-grid">
+
+    <!-- Left: copy + CTAs -->
+    <div>
+      <div class="eyebrow">
+        <span class="eyebrow-tag">v0.1</span>
+        Yet Another Markdown Blog — now public
+      </div>
+
+      <h1>
+        The markdown blog engine for the <em>agentic</em> <span class="accent">era.</span>
+      </h1>
+
+      <p class="hero-sub">
+        File-based, type-safe, framework-agnostic. Write markdown. Get a blog.
+        Ship — with adapters for Next.js, Astro, and React.
+      </p>
+
+      <div class="install">
+        <span class="install-prefix">$</span>
+        <span class="install-cmd">{INSTALL}</span>
+        <button
+          class="install-copy"
+          data-copy={INSTALL}
+          data-label="Copy"
+          aria-label="Copy install command"
+        >
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          Copy
+        </button>
+      </div>
+
+      <div class="hero-actions">
+        <a class="secondary-link" href="/getting-started/">
+          Read the docs
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </a>
+        <a class="secondary-link" href="#agents">
+          Prompt your coding agent
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </a>
+      </div>
+
+      <div class="hero-meta">
+        <div><b>Pure TypeScript</b>Small core with minimal runtime deps</div>
+        <div><b>Static-first</b>Ships HTML with tiny client behavior</div>
+        <div><b>Agent-ready</b>Detect platform, verify support, install safely</div>
+      </div>
+    </div>
+
+    <!-- Right: tabbed code block -->
+    <div>
+      <div class="code-shell">
+        <div class="code-tabs" role="tablist">
+          {tabs.map((tab, i) => (
+            <button
+              role="tab"
+              class={`code-tab${i === 0 ? ' active' : ''}`}
+              data-tab={tab.id}
+              data-file={tab.file}
+              aria-selected={i === 0}
+            >
+              <span class="dot"></span>{tab.label}
+            </button>
+          ))}
+          <span class="code-file">{tabs[0].file}</span>
+        </div>
+
+        {tabs.map((tab, i) => (
+          <div data-panel={tab.id} hidden={i !== 0}>
+            <div class="code-body">
+              {tab.lines.map((ln, idx) => (
+                <div class={`code-line${ln.hl ? ' hl' : ''}`}>
+                  <span class="ln">{idx + 1}</span>
+                  <span><Fragment set:html={ln.html} /></span>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+
+  </div>
+</section>

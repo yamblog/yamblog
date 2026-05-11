@@ -1,0 +1,44 @@
+{
+  "name": "@yamblog/react",
+  "version": "1.0.1",
+  "description": "React adapter for @yamblog/core",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "bun test",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@yamblog/core": "^1.0.1",
+    "react-markdown": "^9.0.0"
+  },
+  "peerDependencies": {
+    "react": ">=18.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.0.0",
+    "@types/node": "^25.0.0",
+    "typescript": "^6.0.0"
+  },
+  "keywords": [
+    "react",
+    "blog",
+    "markdown",
+    "yamblog"
+  ],
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "license": "MIT"
+}

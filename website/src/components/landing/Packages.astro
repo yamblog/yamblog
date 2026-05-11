@@ -1,0 +1,66 @@
+---
+const packages = [
+  {
+    scope: '@yamblog/',
+    name: 'core',
+    desc: 'Framework-agnostic engine. Parser, query, full-text search, RSS, sitemap. Small runtime surface.',
+    exports: 'defineBlog · getPosts · search',
+  },
+  {
+    scope: '@yamblog/',
+    name: 'next',
+    desc: 'Next.js App Router adapter. Metadata, JSON-LD, OG images, RSS handler, sitemap export.',
+    exports: 'generatePostMetadata · BlogPostPage · createRssHandler',
+  },
+  {
+    scope: '@yamblog/',
+    name: 'astro',
+    desc: 'Astro 5 Content Layer loader and pre-built .astro components.',
+    exports: 'yamblogLoader · BlogPostPage · BlogListPage',
+  },
+  {
+    scope: '@yamblog/',
+    name: 'react',
+    desc: 'React hooks and components for Vite SPAs. Client-side search included.',
+    exports: 'useBlog · MarkdownRenderer · PostCard',
+  },
+  {
+    scope: '@yamblog/',
+    name: 'remark',
+    desc: 'Optional markdown plugins: TOC, YouTube/Vimeo embeds, interactive directives.',
+    exports: 'toHtml · remarkToc · remarkInteractive',
+  },
+];
+---
+
+<section id="packages" class="section">
+  <div class="container">
+    <div class="section-head">
+      <div>
+        <div class="section-eyebrow">Monorepo</div>
+        <h2 class="section-title">One core, many <em>adapters.</em></h2>
+      </div>
+      <p class="section-lead">
+        Install only what you need. The public API is small and intentional —
+        the core keeps runtime dependencies minimal, and each adapter adds only what its framework requires.
+      </p>
+    </div>
+
+    <div class="pkg-table">
+      <div class="pkg-row head">
+        <div>Package</div>
+        <div>Description</div>
+        <div>Public exports</div>
+        <div style="justify-self: end">Status</div>
+      </div>
+      {packages.map(pkg => (
+        <div class="pkg-row">
+          <div class="pkg-name"><span class="scope">{pkg.scope}</span>{pkg.name}</div>
+          <div class="pkg-desc">{pkg.desc}</div>
+          <div class="pkg-exports">{pkg.exports}</div>
+          <div class="pkg-status stable"><span class="pulse"></span>Stable</div>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>

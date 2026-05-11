@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      since:
+        description: Git ref to diff from
+        required: false
+        type: string
+      all:
+        description: Build every workspace instead of only affected ones
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.12.0
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build affected workspaces
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ inputs.all }}" == "true" ]]; then
+            bun run build:changed -- --all
+          elif [[ "${{ github.event_name }}" == "workflow_dispatch" && -n "${{ inputs.since }}" ]]; then
+            bun run build:changed -- --since "${{ inputs.since }}"
+          elif [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            bun run build:changed -- --since "origin/${{ github.base_ref }}"
+          elif [[ -n "${{ github.event.before }}" && "${{ github.event.before }}" != "0000000000000000000000000000000000000000" ]]; then
+            bun run build:changed -- --since "${{ github.event.before }}"
+          else
+            bun run build:changed -- --all
+          fi

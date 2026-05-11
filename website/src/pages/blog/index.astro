@@ -1,0 +1,109 @@
+---
+import { defineBlog } from '@yamblog/core';
+import Landing from '../../layouts/Landing.astro';
+import Nav from '../../components/landing/Nav.astro';
+import Footer from '../../components/landing/Footer.astro';
+
+const blog = defineBlog('content/posts');
+const posts = await blog.getPosts();
+
+const publishedCount = posts.length;
+const totalMinutes = posts.reduce((sum, post) => sum + post.readingTime, 0);
+const totalTags = new Set(posts.flatMap(post => post.tags)).size;
+
+const formatDate = (date: Date) =>
+  date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+---
+
+<Landing
+  title="Blog — Yamblog"
+  description="Notes, demos, and implementation details from the Yamblog project."
+>
+  <Nav />
+
+  <main>
+    <section class="blog-hero">
+      <div class="container blog-hero-grid">
+        <div>
+          <p class="blog-kicker">Journal / updates / demos</p>
+          <h1>Writing in the same register as the product.</h1>
+          <p>
+            Product notes, implementation details, and interactive demos from the Yamblog codebase,
+            presented inside the same editorial shell as the home page.
+          </p>
+        </div>
+
+        <aside class="blog-summary">
+          <p class="blog-summary-label">At a glance</p>
+          <div class="blog-summary-list">
+            <div>
+              Published posts
+              <b>{publishedCount}</b>
+            </div>
+            <div>
+              Total reading time
+              <b>{totalMinutes} min</b>
+            </div>
+            <div>
+              Distinct topics
+              <b>{totalTags}</b>
+            </div>
+            <div>
+              Latest post
+              <b>{posts[0] ? formatDate(posts[0].date) : 'None yet'}</b>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <div class="section-head">
+          <div>
+            <div class="section-eyebrow">All posts</div>
+            <h2 class="section-title">Release notes, <em>how-tos,</em> and experiments.</h2>
+          </div>
+          <p class="section-lead">
+            Each entry keeps the same typography, spacing, and material treatment as the landing page
+            instead of falling back to a separate blog theme.
+          </p>
+        </div>
+
+        {posts.length === 0 ? (
+          <div class="blog-empty">No published posts yet.</div>
+        ) : (
+          <div class="blog-list">
+            {posts.map(post => (
+              <article class="blog-card">
+                <div class="blog-card-head">
+                  <span>{post.author}</span>
+                  <span class="blog-card-date">{formatDate(post.date)}</span>
+                </div>
+
+                <div>
+                  <h2><a href={`/blog/${post.slug}`}>{post.title}</a></h2>
+                </div>
+
+                {post.excerpt && <p class="blog-card-excerpt">{post.excerpt}</p>}
+
+                <div class="blog-card-meta">
+                  <span class="blog-pill accent">{post.readingTime} min read</span>
+                  {post.tags.map(tag => (
+                    <span class="blog-pill">{tag}</span>
+                  ))}
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
+  </main>
+
+  <Footer />
+</Landing>

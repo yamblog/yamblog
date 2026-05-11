@@ -1,0 +1,29 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import BlogPostPage from '@yamblog/astro/components/BlogPostPage.astro';
+import { blog } from '../../lib/blog';
+
+export async function getStaticPaths() {
+  const posts = await blog.getPosts();
+  return posts.map(post => ({ params: { slug: post.slug } }));
+}
+
+const { slug } = Astro.params;
+const post = await blog.getPostBySlug(slug!);
+const adjacent = await blog.getAdjacentPosts(slug!);
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  headline: post.title,
+  description: post.excerpt,
+  url: `${blog.siteUrl}/blog/${post.slug}`,
+  datePublished: post.date.toISOString(),
+  author: { '@type': 'Person', name: post.author },
+  keywords: post.tags.join(', '),
+};
+---
+
+<Layout title={post.title} description={post.excerpt}>
+  <BlogPostPage post={post} adjacent={adjacent} jsonLd={jsonLd} />
+</Layout>

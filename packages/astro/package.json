@@ -1,0 +1,46 @@
+{
+  "name": "@yamblog/astro",
+  "version": "1.0.1",
+  "description": "Astro adapter for @yamblog/core",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./components/BlogListPage.astro": "./src/components/BlogListPage.astro",
+    "./components/BlogPostPage.astro": "./src/components/BlogPostPage.astro"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "bun test",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@yamblog/core": "^1.0.1",
+    "@yamblog/remark": "^1.0.1"
+  },
+  "peerDependencies": {
+    "astro": ">=4.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.0.0",
+    "typescript": "^6.0.0"
+  },
+  "keywords": [
+    "astro",
+    "blog",
+    "markdown",
+    "yamblog"
+  ],
+  "files": [
+    "dist",
+    "src/components"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "license": "MIT"
+}

@@ -1,0 +1,127 @@
+---
+const steps = [
+  {
+    num: "01",
+    title: "Verify support",
+    body: "The agent should confirm whether the project is Next.js, Astro, or React/Vite. If not, it should stop instead of forcing a broken integration.",
+  },
+  {
+    num: "02",
+    title: "Inspect the repo",
+    body: "Have the agent read package.json, config files, and app structure before touching anything. It should name the platform and explain why.",
+  },
+  {
+    num: "03",
+    title: "Install the right adapter",
+    body: "Use the official Yamblog package pair for the detected platform and follow local project conventions for package manager and file layout.",
+  },
+  {
+    num: "04",
+    title: "Create a sample post",
+    body: "A first hello-world.md file proves the content path, frontmatter parsing, and route wiring are all correct.",
+  },
+  {
+    num: "05",
+    title: "Self-heal and verify",
+    body: "If imports, routes, or paths fail, the agent should repair the integration and re-check instead of stopping at the first error.",
+  },
+];
+
+const promptLines = [
+  "Inspect this project before editing anything.",
+  "",
+  "1. Detect whether the project uses Next.js, Astro, or React/Vite.",
+  "2. Confirm that the detected platform is supported by Yamblog.",
+  "3. Verify integration steps from the official Yamblog docs or repo, then install only the correct packages.",
+  "4. Integrate Yamblog using project-native file locations and conventions.",
+  "5. Create a sample hello-world.md post in the correct posts directory.",
+  "6. Verify the setup by checking imports, routes/pages, and the content directory wiring.",
+  "7. If an import, route, or path is wrong, fix it and continue.",
+  "8. If the platform is unsupported, stop and explain the safest fallback instead of forcing the install.",
+  "",
+  "Sample post content:",
+  "---",
+  'title: "Hello World"',
+  'date: "2026-05-01"',
+  'author: "Your Name"',
+  'tags: ["general", "intro"]',
+  'excerpt: "My first post powered by Yamblog."',
+  "featured: true",
+  "draft: false",
+  "---",
+  "",
+  "# Hello World",
+  "",
+  "Welcome to my blog, powered by **Yamblog**.",
+];
+---
+
+<section id="agents" class="section">
+  <div class="container">
+    <div class="section-head">
+      <div>
+        <div class="section-eyebrow">For agents</div>
+        <h2 class="section-title">
+          Give your coding agent one prompt. Let it <em>inspect, verify,</em> and
+          integrate.
+        </h2>
+      </div>
+      <p class="section-lead">
+        The prompt tells the model to detect the platform, confirm Yamblog
+        support, install the right adapter, create a sample post, and
+        self-correct if the first pass is wrong.
+      </p>
+    </div>
+
+    <div class="agent">
+      <!-- Steps -->
+      <div class="agent-steps">
+        {
+          steps.map((step) => (
+            <div class="agent-step">
+              <div class="num">{step.num}</div>
+              <div>
+                <h4>{step.title}</h4>
+                <p>{step.body}</p>
+              </div>
+            </div>
+          ))
+        }
+      </div>
+
+      <!-- Setup prompt (sticky) -->
+      <div class="code-shell" style="position: sticky; top: 84px;">
+        <div class="code-tabs">
+          <div class="code-tab active">
+            <span class="dot"></span>prompt-for-llms.md
+          </div>
+          <span class="code-file">copy → paste into agent</span>
+        </div>
+        <div class="code-body">
+          {
+            promptLines.map((ln, i) => (
+              <div class="code-line">
+                <span class="ln">{i + 1}</span>
+                <span
+                  class={
+                    ln.startsWith("#")
+                      ? "tk-c"
+                      : ln.match(/^\d\./)
+                        ? "tk-k"
+                        : ""
+                  }
+                >
+                  {ln}
+                </span>
+              </div>
+            ))
+          }
+        </div>
+      </div>
+    </div>
+    <p style="margin-top: 24px; color: var(--c-muted);">
+      Need the full version? Read <a href="/prompt-for-llms/">Prompt for LLMs</a
+      >.
+    </p>
+  </div>
+</section>

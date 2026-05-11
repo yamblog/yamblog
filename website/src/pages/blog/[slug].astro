@@ -1,0 +1,156 @@
+---
+import { defineBlog } from '@yamblog/core';
+import { toHtml, remarkInteractive } from '@yamblog/remark';
+import remarkDirective from 'remark-directive';
+import Landing from '../../layouts/Landing.astro';
+import Nav from '../../components/landing/Nav.astro';
+import Footer from '../../components/landing/Footer.astro';
+
+export async function getStaticPaths() {
+  const blog = defineBlog('content/posts');
+  const posts = await blog.getPosts();
+  return posts.map(post => ({ params: { slug: post.slug }, props: { post } }));
+}
+
+const { post } = Astro.props;
+const blog = defineBlog('content/posts');
+const adjacent = await blog.getAdjacentPosts(post.slug);
+
+const html = await toHtml(post.content, {
+  remarkPlugins: [remarkDirective, remarkInteractive],
+});
+
+const formatDate = (date: Date) =>
+  date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+---
+
+<Landing
+  title={`${post.title} — Yamblog`}
+  description={post.excerpt ?? `Read ${post.title} on the Yamblog blog.`}
+>
+  <Nav />
+
+  <main class="blog-post">
+    <div class="container">
+      <div class="blog-post-shell">
+        <a class="blog-post-back" href="/blog">← Back to blog</a>
+
+        <header class="blog-post-header">
+          <p class="blog-kicker">Blog post</p>
+          <h1>{post.title}</h1>
+          {post.excerpt && <p class="blog-dek">{post.excerpt}</p>}
+
+          <div class="blog-post-meta">
+            <span class="blog-pill">{formatDate(post.date)}</span>
+            <span class="blog-pill accent">{post.readingTime} min read</span>
+            <span class="blog-pill">{post.author}</span>
+            {post.tags.map(tag => (
+              <span class="blog-pill">{tag}</span>
+            ))}
+          </div>
+        </header>
+
+        <article class="blog-prose" set:html={html} />
+
+        {(adjacent.prev || adjacent.next) && (
+          <nav class="blog-post-nav" aria-label="Post navigation">
+            {adjacent.prev ? (
+              <a href={`/blog/${adjacent.prev.slug}`}>
+                <span class="blog-post-nav-label">Previous</span>
+                <span class="blog-post-nav-title">← {adjacent.prev.title}</span>
+              </a>
+            ) : (
+              <div></div>
+            )}
+
+            {adjacent.next ? (
+              <a class="next-link" href={`/blog/${adjacent.next.slug}`}>
+                <span class="blog-post-nav-label">Next</span>
+                <span class="blog-post-nav-title">{adjacent.next.title} →</span>
+              </a>
+            ) : (
+              <div></div>
+            )}
+          </nav>
+        )}
+      </div>
+    </div>
+
+    <script>
+      class CounterDemo extends HTMLElement {
+        connectedCallback() {
+          const start = parseInt(this.getAttribute('start') ?? '0', 10);
+          const step = parseInt(this.getAttribute('step') ?? '1', 10);
+          let count = start;
+
+          this.style.cssText = [
+            'display:inline-flex',
+            'align-items:center',
+            'gap:16px',
+            'border:1px solid var(--line-2)',
+            'border-radius:14px',
+            'padding:14px 24px',
+            'margin:16px 0',
+            'background:var(--surface)',
+            'color:var(--ink)',
+          ].join(';');
+
+          const btn = (label: string, onClick: () => void) => {
+            const b = document.createElement('button');
+            b.textContent = label;
+            b.style.cssText = [
+              'font-size:1.4rem',
+              'line-height:1',
+              'border:1px solid var(--line)',
+              'border-radius:999px',
+              'background:var(--bg-2)',
+              'cursor:pointer',
+              'color:var(--ink)',
+              'font-weight:700',
+              'width:2.25rem',
+              'height:2.25rem',
+              'padding:0',
+            ].join(';');
+            b.addEventListener('click', onClick);
+            return b;
+          };
+
+          const display = document.createElement('span');
+          display.textContent = String(count);
+          display.style.cssText = [
+            'font-size:1.5rem',
+            'font-weight:600',
+            'min-width:3.5ch',
+            'text-align:center',
+            'color:var(--ink)',
+            'font-variant-numeric:tabular-nums',
+          ].join(';');
+
+          const update = () => {
+            display.textContent = String(count);
+          };
+
+          this.replaceChildren(
+            btn('−', () => {
+              count -= step;
+              update();
+            }),
+            display,
+            btn('+', () => {
+              count += step;
+              update();
+            }),
+          );
+        }
+      }
+
+      customElements.define('counter-demo', CounterDemo);
+    </script>
+  </main>
+
+  <Footer />
+</Landing>

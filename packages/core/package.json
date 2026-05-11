@@ -1,0 +1,41 @@
+{
+  "name": "@yamblog/core",
+  "version": "1.0.1",
+  "description": "Framework-agnostic markdown blog engine",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "type": "module",
+  "scripts": {
+    "build": "rm -rf ./dist && tsc -p tsconfig.json",
+    "test": "bun test",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src/"
+  },
+  "dependencies": {
+    "gray-matter": "^4.0.3",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/node": "^25.0.0",
+    "typescript": "^6.0.0"
+  },
+  "keywords": [
+    "blog",
+    "markdown",
+    "cms",
+    "yamblog"
+  ],
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "license": "MIT"
+}

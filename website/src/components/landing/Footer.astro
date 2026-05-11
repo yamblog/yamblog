@@ -1,0 +1,55 @@
+---
+const year = new Date().getFullYear();
+---
+
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a class="brand" href="/">
+          <span class="brand-mark">Y</span>
+          <span class="brand-name">YAMBlog<em> /yamblog/</em></span>
+        </a>
+        <p>Yet Another Markdown Blog. The missing middle between starter templates and a full CMS.</p>
+      </div>
+
+      <div class="footer-col">
+        <h5>Packages</h5>
+        <ul>
+          <li><a href="https://www.npmjs.com/package/@yamblog/core" target="_blank" rel="noopener">@yamblog/core</a></li>
+          <li><a href="https://www.npmjs.com/package/@yamblog/next" target="_blank" rel="noopener">@yamblog/next</a></li>
+          <li><a href="https://www.npmjs.com/package/@yamblog/astro" target="_blank" rel="noopener">@yamblog/astro</a></li>
+          <li><a href="https://www.npmjs.com/package/@yamblog/react" target="_blank" rel="noopener">@yamblog/react</a></li>
+          <li><a href="https://www.npmjs.com/package/@yamblog/remark" target="_blank" rel="noopener">@yamblog/remark</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h5>Docs</h5>
+        <ul>
+          <li><a href="/getting-started/">Getting started</a></li>
+          <li><a href="/architecture/">Architecture</a></li>
+          <li><a href="/extensibility/">Extensibility</a></li>
+          <li><a href="/ai-agent-authoring/">Agent guide</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h5>Community</h5>
+        <ul>
+          <li><a href="https://github.com/yamblog/yamblog" target="_blank" rel="noopener">GitHub</a></li>
+          <li><a href="/blog">Blog</a></li>
+          <li><a href="/blog/counter-demo">Interactive demo</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <div>© {year} Yamblog · MIT</div>
+      <div class="meta">
+        <span>v0.1.0</span>
+        <span>last shipped {new Date().toISOString().slice(0, 10)}</span>
+      </div>
+    </div>
+  </div>
+</footer>

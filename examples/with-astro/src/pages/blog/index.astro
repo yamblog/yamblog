@@ -1,0 +1,12 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import BlogListPage from '@yamblog/astro/components/BlogListPage.astro';
+import { blog } from '../../lib/blog';
+
+const query = Astro.url.searchParams.get('q') ?? undefined;
+const posts = query ? await blog.search(query) : await blog.getPosts();
+---
+
+<Layout title="Blog" description="All posts">
+  <BlogListPage posts={posts} query={query} />
+</Layout>

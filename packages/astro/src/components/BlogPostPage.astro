@@ -1,0 +1,63 @@
+---
+import type { Post, AdjacentPosts } from '@yamblog/core';
+import { toHtml } from '@yamblog/remark';
+
+interface Props {
+  post: Post;
+  adjacent?: AdjacentPosts;
+  /** Base path for blog links. Default: "/blog" */
+  basePath?: string;
+  /** JSON-LD object to inject as a script tag */
+  jsonLd?: Record<string, unknown>;
+}
+
+const { post, adjacent, basePath = '/blog', jsonLd } = Astro.props;
+
+const html = await toHtml(post.content);
+
+const formattedDate = post.date.toLocaleDateString('en-US', {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+});
+---
+
+{jsonLd && (
+  <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+)}
+
+<main class="max-w-2xl mx-auto px-4 py-16">
+  <a href={basePath} class="text-sm text-zinc-500 hover:underline">&larr; All posts</a>
+
+  <h1 class="text-3xl font-bold mt-6 mb-3">{post.title}</h1>
+  <p class="text-sm text-zinc-500 mb-8">
+    {formattedDate}
+    &middot; {post.readingTime} min read
+    &middot; {post.author}
+  </p>
+
+  {post.tags.length > 0 && (
+    <div class="mb-8 flex gap-2 flex-wrap">
+      {post.tags.map((tag) => (
+        <span class="text-xs bg-zinc-100 px-2 py-0.5 rounded">{tag}</span>
+      ))}
+    </div>
+  )}
+
+  <article class="prose max-w-none" set:html={html} />
+
+  {adjacent && (
+    <div class="mt-12 flex justify-between text-sm text-zinc-500">
+      {adjacent.prev && (
+        <a href={`${basePath}/${adjacent.prev.slug}`} class="hover:underline">
+          &larr; {adjacent.prev.title}
+        </a>
+      )}
+      {adjacent.next && (
+        <a href={`${basePath}/${adjacent.next.slug}`} class="ml-auto hover:underline">
+          {adjacent.next.title} &rarr;
+        </a>
+      )}
+    </div>
+  )}
+</main>
