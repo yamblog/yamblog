@@ -7,7 +7,7 @@
       <span class="brand-name">YAMBlog<em> /yamblog/</em></span>
     </a>
 
-    <nav class="nav-links">
+    <nav class="nav-links" aria-label="Primary">
       <a href="#features">Features</a>
       <a href="#packages">Packages</a>
       <a href="#agents">Agents</a>
@@ -33,14 +33,67 @@
         </svg>
         GitHub
       </a>
+
+      <details class="nav-menu">
+        <summary class="icon-btn nav-menu-btn" aria-label="Open menu">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round">
+            <path d="M4 7h16M4 12h16M4 17h16"/>
+          </svg>
+        </summary>
+
+        <div class="nav-menu-panel" role="menu" aria-label="Primary">
+          <a href="/#features">Features</a>
+          <a href="/#packages">Packages</a>
+          <a href="/#agents">Agents</a>
+          <a href="/getting-started/">Docs</a>
+          <a href="/blog">Blog</a>
+          <a href="https://github.com/yamblog/yamblog" target="_blank" rel="noopener">GitHub</a>
+        </div>
+      </details>
     </div>
   </div>
 </header>
 
 <style>
+  .nav-menu { display: none; position: relative; }
+  .nav-menu > summary { list-style: none; }
+  .nav-menu > summary::-webkit-details-marker { display: none; }
+  .nav-menu-panel { display: none; }
+
   /* Sun/moon toggle — show correct icon per theme */
   [data-theme="dark"] .icon-moon  { display: none; }
   [data-theme="light"] .icon-sun  { display: none; }
   /* Default before JS (dark) */
   :root:not([data-theme="light"]) .icon-moon { display: none; }
+
+  @media (max-width: 920px) {
+    .nav-links { display: none; }
+    .nav-menu { display: block; }
+    .nav-menu[open] .nav-menu-panel {
+      display: flex;
+      flex-direction: column;
+      position: absolute;
+      right: 0;
+      top: 42px;
+      width: min(240px, 80vw);
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--surface);
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.16);
+      z-index: 60;
+    }
+    .nav-menu-panel a {
+      padding: 10px 12px;
+      border-radius: 10px;
+      color: var(--ink);
+      font-size: 14px;
+    }
+    .nav-menu-panel a:hover { background: var(--bg-2); }
+  }
+
+  @media (max-width: 640px) {
+    .gh-btn { display: none; }
+    .brand-name em { display: none; }
+  }
 </style>

@@ -631,6 +631,8 @@ footer { border-top: 1px solid var(--hairline); padding: 56px 0 36px; }
 
 /* ── RESPONSIVE ── */
 @media (max-width: 920px) {
+  .container { padding: 0 20px; }
+  .nav-inner { min-height: 60px; height: auto; padding: 10px 0; gap: 12px; align-items: center; }
   .hero-grid, .section-head, .agent, .cta-card, .footer-grid, .blog-hero-grid, .blog-list, .blog-post-nav { grid-template-columns: 1fr; gap: 36px; }
   .features { grid-template-columns: 1fr; }
   .pkg-row { grid-template-columns: 1fr; gap: 8px; padding: 16px 18px; }
@@ -640,4 +642,51 @@ footer { border-top: 1px solid var(--hairline); padding: 56px 0 36px; }
   .blog-card { padding: 24px; }
   .blog-post { padding-top: 56px; }
   .blog-prose { font-size: 15.5px; }
+  .hero { padding-top: 56px; padding-bottom: 84px; }
+  .hero-grid { gap: 28px; }
+  .hero h1 { font-size: clamp(38px, 10vw, 58px); }
+  .hero-sub { font-size: 16px; max-width: 34rem; }
+  .install { flex-direction: column; max-width: none; }
+  .install-prefix { padding: 12px 14px 0; }
+  .install-cmd { padding: 6px 14px 12px; word-break: break-word; }
+  .install-copy { border-left: 0; border-top: 1px solid var(--line); justify-content: center; height: 42px; }
+  .hero-actions { flex-direction: column; align-items: flex-start; gap: 12px; }
+  .hero-meta { gap: 18px 24px; margin-top: 36px; padding-top: 22px; }
+  .section { padding: 84px 0; }
+  .section-head { margin-bottom: 32px; }
+  .cta-card { padding: 36px 32px; }
+  .cta-aside { border-left: 0; padding-left: 0; border-top: 1px solid var(--line-2); padding-top: 20px; }
+  .blog-hero { padding: 60px 0 32px; }
+  .blog-hero h1 { max-width: 14ch; }
+  .blog-summary-list { gap: 14px 18px; }
+  .blog-card h2 { font-size: 29px; }
+  .blog-post-nav-title { font-size: 22px; }
+  .footer-bottom { flex-direction: column; gap: 8px; }
+}
+
+@media (max-width: 640px) {
+  .container { padding: 0 16px; }
+  .nav-inner { gap: 10px; }
+  .icon-btn { width: 30px; height: 30px; }
+  .hero h1 { font-size: clamp(34px, 12vw, 48px); }
+  .hero-sub { font-size: 15px; }
+  .hero-meta { grid-template-columns: 1fr; display: grid; }
+  .feature, .blog-card, .blog-summary, .cta-card { padding-left: 20px; padding-right: 20px; }
+  .features { margin-inline: 0; }
+  .feature { padding-top: 28px; padding-bottom: 30px; }
+  .feature h3 { font-size: 15.5px; }
+  .feature p, .pkg-desc, .section-lead, .cta p, .blog-card-excerpt, .footer-brand p { font-size: 14px; }
+  .blog-summary-list { grid-template-columns: 1fr; }
+  .blog-card-head { flex-direction: column; align-items: flex-start; gap: 6px; }
+  .blog-card h2 { font-size: 26px; }
+  .blog-post { padding-top: 44px; }
+  .blog-post-header h1 { font-size: clamp(32px, 10vw, 44px); }
+  .blog-prose h2 { font-size: 28px; }
+  .blog-prose h3 { font-size: 24px; }
+  .blog-prose h4 { font-size: 20px; }
+  .blog-post-nav { gap: 12px; }
+  .blog-post-nav a { padding: 16px 16px; }
+  .blog-post-nav-title { font-size: 18px; }
+  .cta-card { padding: 28px 20px; gap: 28px; }
+  .cta h2 { font-size: clamp(28px, 9vw, 38px); }
 }
