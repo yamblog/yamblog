@@ -6,7 +6,11 @@ import cloudflare from '@astrojs/cloudflare';
 export default defineConfig({
   adapter: cloudflare({
     prerenderEnvironment: 'node',
+    imageService: 'passthrough',
   }),
+  session: {
+    driver: { entrypoint: 'unstorage/drivers/null' },
+  },
   integrations: [
     starlight({
       title: 'YAMBlog',

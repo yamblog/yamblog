@@ -30,6 +30,9 @@ const steps = [
 const promptLines = [
   "Inspect this project before editing anything.",
   "",
+  "Yamblog repo: https://github.com/yamblog/yamblog",
+  "Packages: @yamblog/core, @yamblog/next, @yamblog/astro, @yamblog/react, @yamblog/remark",
+  "",
   "1. Detect whether the project uses Next.js, Astro, or React/Vite.",
   "2. Confirm that the detected platform is supported by Yamblog.",
   "3. Verify integration steps from the official Yamblog docs or repo, then install only the correct packages.",
@@ -95,7 +98,14 @@ const promptLines = [
           <div class="code-tab active">
             <span class="dot"></span>prompt-for-llms.md
           </div>
-          <span class="code-file">copy → paste into agent</span>
+          <button
+            class="code-copy"
+            data-copy={promptLines.join('\n')}
+            data-label="Copy"
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            Copy
+          </button>
         </div>
         <div class="code-body">
           {
