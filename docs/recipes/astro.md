@@ -456,3 +456,13 @@ featured:   true                  # default: false
 draft:      true                  # default: false — drafts are excluded from getPosts()
 ---
 ```
+
+## Custom fields
+
+Extend the default schema to add typed custom frontmatter fields. Add `astro check` to your build script to enforce types in `.astro` templates:
+
+```json
+"build": "astro check && astro build"
+```
+
+See the [Custom Fields recipe](./custom-fields.md) for validation types and full examples.

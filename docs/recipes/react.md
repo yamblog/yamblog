@@ -165,3 +165,13 @@ src/
 
 > Add `src/generated/posts.json` to `.gitignore` if you prefer to generate it
 > fresh on every build rather than committing it.
+
+## Custom fields
+
+Extend the default schema to add typed custom frontmatter fields. Add `tsc --noEmit` to your build script to enforce types before bundling:
+
+```json
+"build": "tsc --noEmit && vite build"
+```
+
+See the [Custom Fields recipe](./custom-fields.md) for validation types and full examples.

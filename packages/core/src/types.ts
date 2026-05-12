@@ -15,17 +15,19 @@ export const defaultSchema = z.object({
 
 export type DefaultFrontmatter = z.infer<typeof defaultSchema>;
 
-// A parsed blog post — frontmatter fields merged with system fields
-export type Post = DefaultFrontmatter & {
-  /** Stable ID: "blog-{slug}" — safe to use as foreign key in external services */
-  id: string;
-  /** URL-safe slug derived from filename */
-  slug: string;
-  /** Raw markdown body (no frontmatter) */
-  content: string;
-  /** Estimated reading time in minutes at 200 WPM */
-  readingTime: number;
-};
+// A parsed blog post — schema fields merged with system fields.
+// TSchema defaults to defaultSchema, so Post with no args is backward-compatible.
+export type Post<TSchema extends z.ZodObject<z.ZodRawShape> = typeof defaultSchema> =
+  z.infer<TSchema> & {
+    /** Stable ID: "blog-{slug}" — safe to use as foreign key in external services */
+    id: string;
+    /** URL-safe slug derived from filename */
+    slug: string;
+    /** Raw markdown body (no frontmatter) */
+    content: string;
+    /** Estimated reading time in minutes at 200 WPM */
+    readingTime: number;
+  };
 
 export type SearchIndexEntry = {
   id: string;
@@ -39,9 +41,9 @@ export type SearchIndexEntry = {
   readingTime: number;
 };
 
-export type AdjacentPosts = {
-  prev: Post | null;
-  next: Post | null;
+export type AdjacentPosts<TSchema extends z.ZodObject<z.ZodRawShape> = typeof defaultSchema> = {
+  prev: Post<TSchema> | null;
+  next: Post<TSchema> | null;
 };
 
 export type RssOptions = {
@@ -70,44 +72,44 @@ export type LlmsTxtOptions = {
   filter?: (post: Post) => boolean;
 };
 
-export type RelatedPostsConfig = {
+export type RelatedPostsConfig<TSchema extends z.ZodObject<z.ZodRawShape> = typeof defaultSchema> = {
   /** Max related posts to return. Default: 3 */
   limit?: number;
   /** Built-in strategy. Default: 'tags+category' */
   strategy?: 'tags' | 'category' | 'tags+category';
   /** Custom scorer — overrides strategy when provided */
-  scorer?: (current: Post, candidate: Post) => number;
+  scorer?: (current: Post<TSchema>, candidate: Post<TSchema>) => number;
 };
 
-export type BlogConfig = {
+export type BlogConfig<TSchema extends z.ZodObject<z.ZodRawShape> = typeof defaultSchema> = {
   /** Path to the directory containing .md files */
   contentDir: string;
   /** Site URL used as the base for RSS, sitemap, and JSON-LD links */
   siteUrl?: string;
   /** Zod schema for frontmatter validation. Defaults to defaultSchema */
-  schema?: z.ZodObject<z.ZodRawShape>;
+  schema?: TSchema;
   /** Custom sort function. Default: newest first */
-  sortBy?: (a: Post, b: Post) => number;
+  sortBy?: (a: Post<TSchema>, b: Post<TSchema>) => number;
   /** Custom slug generator. Default: strips .md extension */
   slugify?: (filename: string) => string;
   /** Related posts configuration */
-  relatedPosts?: RelatedPostsConfig;
+  relatedPosts?: RelatedPostsConfig<TSchema>;
 };
 
 // Return type of createBlog()
-export type Blog = {
+export type Blog<TSchema extends z.ZodObject<z.ZodRawShape> = typeof defaultSchema> = {
   /** Site URL provided in config, or auto-detected by defineBlog() */
   siteUrl: string;
   /** Validates content directory, parses all markdown files, and throws on invalid content */
-  validateContent: () => Promise<Post[]>;
-  getPosts: () => Promise<Post[]>;
-  getPostBySlug: (slug: string) => Promise<Post>;
-  getPostsByCategory: (category: string) => Promise<Post[]>;
-  getPostsByTag: (tag: string) => Promise<Post[]>;
-  getFeaturedPosts: () => Promise<Post[]>;
-  search: (query: string) => Promise<Post[]>;
-  getAdjacentPosts: (slug: string) => Promise<AdjacentPosts>;
-  getRelatedPosts: (slug: string) => Promise<Post[]>;
+  validateContent: () => Promise<Post<TSchema>[]>;
+  getPosts: () => Promise<Post<TSchema>[]>;
+  getPostBySlug: (slug: string) => Promise<Post<TSchema>>;
+  getPostsByCategory: (category: string) => Promise<Post<TSchema>[]>;
+  getPostsByTag: (tag: string) => Promise<Post<TSchema>[]>;
+  getFeaturedPosts: () => Promise<Post<TSchema>[]>;
+  search: (query: string) => Promise<Post<TSchema>[]>;
+  getAdjacentPosts: (slug: string) => Promise<AdjacentPosts<TSchema>>;
+  getRelatedPosts: (slug: string) => Promise<Post<TSchema>[]>;
   getCategories: () => Promise<string[]>;
   getTags: () => Promise<string[]>;
   generateRss: (options: RssOptions) => Promise<string>;

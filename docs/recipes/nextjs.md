@@ -173,3 +173,9 @@ app/
 content/posts/                  markdown files
 lib/blog.ts                     blog instance
 ```
+
+## Custom fields
+
+Extend the default schema to add typed custom frontmatter fields. `next build` runs `tsc`, so type errors in pages are caught automatically.
+
+See the [Custom Fields recipe](./custom-fields.md) for validation types, full examples, and type enforcement details.

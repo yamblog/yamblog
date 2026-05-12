@@ -1,6 +1,6 @@
 {
   "name": "@yamblog/astro",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Astro adapter for @yamblog/core",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -19,7 +19,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@yamblog/core": "^1.1.0",
+    "@yamblog/core": "^1.2.0",
     "@yamblog/remark": "^1.1.0"
   },
   "peerDependencies": {

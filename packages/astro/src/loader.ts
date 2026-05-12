@@ -1,5 +1,4 @@
 import { createBlog } from '@yamblog/core';
-import type { Post } from '@yamblog/core';
 import { z } from 'zod';
 
 export type YamblogLoaderOptions = {
@@ -69,7 +68,7 @@ export function yamblogLoader(options: YamblogLoaderOptions) {
         schema: options.schema,
       });
 
-      let posts: Post[];
+      let posts;
       try {
         posts = await blog.getPosts();
       } catch (err) {

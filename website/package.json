@@ -8,9 +8,12 @@
   },
   "scripts": {
     "dev": "astro dev",
-    "build": "bun run --cwd ../packages/core build && bun run --cwd ../packages/remark build && astro build",
+    "build": "bun run --cwd ../packages/core build && bun run --cwd ../packages/remark build && astro check && astro build",
     "preview": "astro preview",
     "astro": "astro"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.9"
   },
   "dependencies": {
     "@astrojs/cloudflare": "^13.5.0",

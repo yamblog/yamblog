@@ -1,14 +1,18 @@
+import { z } from 'zod';
 import { loadAllPosts, loadPosts, getPostBySlug, getPostsByCategory, getPostsByTag, getFeaturedPosts, getCategories, getTags, getAdjacentPosts } from './query.js';
 import { searchPosts } from './search.js';
 import { getRelatedPosts } from './related.js';
 import { generateRss } from './rss.js';
 import { generateSitemap } from './sitemap.js';
 import { generateLlmsTxt } from './llms.js';
-import type { Blog, BlogConfig, RssOptions, SitemapOptions, LlmsTxtOptions } from './types.js';
+import { defaultSchema } from './types.js';
+import type { Blog, BlogConfig, Post, RssOptions, SitemapOptions, LlmsTxtOptions } from './types.js';
 
-export function createBlog(config: BlogConfig): Blog {
+export function createBlog<TSchema extends z.ZodObject<z.ZodRawShape> = typeof defaultSchema>(
+  config: BlogConfig<TSchema>,
+): Blog<TSchema> {
   // Cache the promise so the filesystem is read only once per blog instance
-  let postsCache: Promise<import('./types.js').Post[]> | null = null;
+  let postsCache: Promise<Post<TSchema>[]> | null = null;
   const getCachedPosts = () => {
     postsCache ??= loadPosts(config);
     return postsCache;
@@ -72,22 +76,22 @@ export function createBlog(config: BlogConfig): Blog {
 
     async generateRss(options: RssOptions) {
       const posts = await getCachedPosts();
-      return generateRss(posts, { siteUrl: config.siteUrl ?? '', ...options });
+      return generateRss(posts as Post[], { siteUrl: config.siteUrl ?? '', ...options });
     },
 
     async generateSitemap(options: SitemapOptions = {}) {
       const posts = await getCachedPosts();
-      return generateSitemap(posts, { siteUrl: config.siteUrl ?? '', ...options });
+      return generateSitemap(posts as Post[], { siteUrl: config.siteUrl ?? '', ...options });
     },
 
     async generateLlmsTxt(options: LlmsTxtOptions = {}) {
       const posts = await getCachedPosts();
-      return generateLlmsTxt(posts, { siteUrl: config.siteUrl ?? '', ...options });
+      return generateLlmsTxt(posts as Post[], { siteUrl: config.siteUrl ?? '', ...options });
     },
 
     async generateSearchIndex() {
       const posts = await getCachedPosts();
-      return posts.map(post => ({
+      return (posts as Post[]).map(post => ({
         id: post.id,
         slug: post.slug,
         title: post.title,

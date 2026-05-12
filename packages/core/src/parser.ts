@@ -9,14 +9,15 @@ import type { Post } from './types.js';
  * Uses gray-matter to split frontmatter from content,
  * then validates frontmatter against the provided Zod schema.
  */
-export function parsePost(
+export function parsePost<TSchema extends z.ZodObject<z.ZodRawShape> = typeof defaultSchema>(
   raw: string,
   slug: string,
-  schema: z.ZodObject<z.ZodRawShape> = defaultSchema,
-): Post {
+  schema?: TSchema,
+): Post<TSchema> {
+  const s = schema ?? defaultSchema;
   const { data, content } = matter(raw);
 
-  const result = schema.safeParse(data);
+  const result = s.safeParse(data);
   if (!result.success) {
     throw new Error(
       `Invalid frontmatter in post "${slug}":\n${result.error.message}`,
@@ -24,10 +25,10 @@ export function parsePost(
   }
 
   return {
-    ...(result.data as ReturnType<typeof defaultSchema.parse>),
+    ...(result.data as z.infer<TSchema>),
     id: generateId(slug),
     slug,
     content: content.trim(),
     readingTime: readingTime(content),
-  } as Post;
+  } as Post<TSchema>;
 }
