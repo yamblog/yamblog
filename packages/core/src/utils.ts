@@ -22,10 +22,28 @@ export function readingTime(content: string): number {
 }
 
 /**
- * Default slug generator — strips .md and .mdx extensions.
+ * Default slug generator — strips .md/.mdx extensions and sanitizes the
+ * result into a URL-safe slug: lowercased, whitespace and underscores
+ * become dashes, and characters outside [a-z0-9-] are removed.
+ * "My Post.md" → "my-post"
  */
 export function defaultSlugify(filename: string): string {
-  return filename.replace(/\.mdx?$/, '');
+  return filename
+    .replace(/\.mdx?$/, '')
+    .toLowerCase()
+    .replace(/[\s_]+/g, '-')
+    .replace(/[^a-z0-9-]/g, '')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
+/**
+ * Normalizes a URL path prefix: ensures a single leading slash and no
+ * trailing slash. '' and '/' both normalize to '' (site root).
+ */
+export function normalizeBasePath(basePath: string): string {
+  const trimmed = basePath.replace(/^\/+|\/+$/g, '');
+  return trimmed ? `/${trimmed}` : '';
 }
 
 /**

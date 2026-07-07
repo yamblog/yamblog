@@ -50,6 +50,7 @@ export async function loadPosts<TSchema extends z.ZodObject<z.ZodRawShape> = typ
   config: BlogConfig<TSchema>,
 ): Promise<Post<TSchema>[]> {
   const posts = await loadAllPosts(config);
+  if (config.includeDrafts) return posts;
   return posts.filter(post => !(post as Post).draft);
 }
 
@@ -60,6 +61,13 @@ export function getPostBySlug<TSchema extends z.ZodObject<z.ZodRawShape> = typeo
   const post = posts.find(p => p.slug === slug);
   if (!post) throw new Error(`Post not found: ${slug}`);
   return post;
+}
+
+export function findPostBySlug<TSchema extends z.ZodObject<z.ZodRawShape> = typeof defaultSchema>(
+  posts: Post<TSchema>[],
+  slug: string,
+): Post<TSchema> | null {
+  return posts.find(p => p.slug === slug) ?? null;
 }
 
 export function getPostsByCategory<TSchema extends z.ZodObject<z.ZodRawShape> = typeof defaultSchema>(

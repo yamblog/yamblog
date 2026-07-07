@@ -85,7 +85,7 @@ const html = await toHtml(post.content, { remarkPlugins: [remarkToc] });
 |--------|------|-------------|
 | `base` | `string` | Absolute path to the posts directory |
 | `pattern` | `string?` | Reserved for future glob support |
-| `schema` | `ZodObject?` | Custom Zod schema (defaults to core schema) |
+| `schema` | `ZodObject?` | Custom frontmatter Zod schema (defaults to core schema). System fields (`id`, `slug`, `content`, `readingTime`) are added automatically |
 
 ### `BlogPostPage` props
 

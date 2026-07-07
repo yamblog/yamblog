@@ -3,6 +3,7 @@ import { join } from 'path';
 import {
   loadPosts,
   getPostBySlug,
+  findPostBySlug,
   getPostsByCategory,
   getPostsByTag,
   getFeaturedPosts,
@@ -32,6 +33,25 @@ describe('loadPosts', () => {
       sortBy: (a, b) => a.date.getTime() - b.date.getTime(), // oldest first
     });
     expect(posts[0].slug).toBe('hello-world');
+  });
+
+  it('includes drafts when includeDrafts is true', async () => {
+    const posts = await loadPosts({ contentDir, includeDrafts: true });
+    expect(posts.length).toBe(3);
+    expect(posts.some(p => p.draft)).toBe(true);
+  });
+});
+
+describe('findPostBySlug', () => {
+  it('returns the post with matching slug', async () => {
+    const posts = await loadPosts({ contentDir });
+    const post = findPostBySlug(posts, 'hello-world');
+    expect(post?.title).toBe('Hello World');
+  });
+
+  it('returns null for an unknown slug', async () => {
+    const posts = await loadPosts({ contentDir });
+    expect(findPostBySlug(posts, 'nonexistent')).toBeNull();
   });
 });
 

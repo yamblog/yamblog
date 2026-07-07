@@ -8,6 +8,8 @@ type BreadcrumbItem = {
 type MetadataOptions = {
   siteUrl: string;
   siteName?: string;
+  /** URL path prefix where the blog is mounted. Default: '/blog' */
+  basePath?: string;
 };
 
 /**
@@ -15,9 +17,9 @@ type MetadataOptions = {
  */
 export function generatePostMetadata(
   post: Post,
-  { siteUrl, siteName }: MetadataOptions,
+  { siteUrl, siteName, basePath = '/blog' }: MetadataOptions,
 ) {
-  const url = `${siteUrl}/blog/${post.slug}`;
+  const url = `${siteUrl}${basePath}/${post.slug}`;
   const description = post.excerpt ?? post.title;
 
   return {
@@ -71,14 +73,14 @@ export function generateBreadcrumbJsonLd(items: BreadcrumbItem[]) {
  */
 export function generateBlogJsonLd(
   post: Post,
-  { siteUrl }: MetadataOptions,
+  { siteUrl, basePath = '/blog' }: MetadataOptions,
 ) {
   return {
     '@context': 'https://schema.org',
     '@type': 'Article',
     headline: post.title,
     description: post.excerpt,
-    url: `${siteUrl}/blog/${post.slug}`,
+    url: `${siteUrl}${basePath}/${post.slug}`,
     datePublished: post.date.toISOString(),
     author: {
       '@type': 'Person',

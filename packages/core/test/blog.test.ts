@@ -107,4 +107,32 @@ describe('createBlog', () => {
     const b = await blog2.getPosts();
     expect(a).toBe(b);
   });
+
+  it('findPostBySlug returns the post or null', async () => {
+    const post = await blog.findPostBySlug('hello-world');
+    expect(post?.title).toBe('Hello World');
+    expect(await blog.findPostBySlug('nonexistent')).toBeNull();
+  });
+
+  it('exposes the normalized basePath, defaulting to /blog', () => {
+    expect(blog.basePath).toBe('/blog');
+    expect(createBlog({ contentDir, basePath: 'posts/' }).basePath).toBe('/posts');
+    expect(createBlog({ contentDir, basePath: '' }).basePath).toBe('');
+  });
+
+  it('includes drafts when includeDrafts is set', async () => {
+    const b = createBlog({ contentDir, includeDrafts: true });
+    const posts = await b.getPosts();
+    expect(posts.length).toBe(3);
+  });
+
+  it('uses a custom basePath in RSS, sitemap, and llms.txt URLs', async () => {
+    const b = createBlog({ contentDir, siteUrl: 'https://example.com', basePath: '/articles' });
+    const rss = await b.generateRss({ title: 'T', description: 'D' });
+    const sitemap = await b.generateSitemap();
+    const llms = await b.generateLlmsTxt({ filter: () => true });
+    expect(rss).toContain('https://example.com/articles/hello-world');
+    expect(sitemap).toContain('https://example.com/articles/hello-world');
+    expect(llms).toContain('https://example.com/articles/hello-world');
+  });
 });

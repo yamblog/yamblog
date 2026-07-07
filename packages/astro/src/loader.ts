@@ -1,5 +1,13 @@
-import { createBlog } from '@yamblog/core';
+import { createBlog, defaultSchema } from '@yamblog/core';
 import { z } from 'zod';
+
+// System fields that yamblog adds to every post on top of the frontmatter schema
+const systemFields = {
+  id: z.string(),
+  slug: z.string(),
+  content: z.string(),
+  readingTime: z.number(),
+};
 
 export type YamblogLoaderOptions = {
   /** Absolute path to the directory containing .md / .mdx files */
@@ -45,21 +53,9 @@ export function yamblogLoader(options: YamblogLoaderOptions) {
     name: 'yamblog-loader',
 
     schema() {
-      return options.schema ?? z.object({
-        id: z.string(),
-        slug: z.string(),
-        title: z.string(),
-        date: z.date(),
-        excerpt: z.string().optional(),
-        category: z.string().optional(),
-        tags: z.array(z.string()),
-        author: z.string(),
-        coverImage: z.string().optional(),
-        featured: z.boolean(),
-        draft: z.boolean(),
-        content: z.string(),
-        readingTime: z.number(),
-      });
+      // Derive from the frontmatter schema so custom fields are typed in
+      // Astro too, and extend with the system fields yamblog adds per post.
+      return (options.schema ?? defaultSchema).extend(systemFields);
     },
 
     async load({ store, logger }: AstroLoaderContext) {

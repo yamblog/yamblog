@@ -52,7 +52,8 @@ Welcome to my blog! This is the body of the post in **markdown**.
 Required fields: `title`, `date`.
 Optional but recommended: `author`, `tags`, `excerpt`, `draft`.
 
-The `slug` is derived from the filename — `hello-world.md` becomes `/blog/hello-world`.
+The `slug` is derived from the filename and sanitized into a URL-safe form —
+`hello-world.md` becomes `/blog/hello-world`, and `My Post.md` becomes `/blog/my-post`.
 Do not put `slug` in frontmatter; it is a system field.
 
 ## Create a blog instance
@@ -67,13 +68,27 @@ export const blog = createBlog({
 ```
 
 `createBlog` returns a `Blog` object. All methods return Promises and are safe
-to call in parallel — results are cached after the first load.
+to call in parallel — results are cached after the first load. In development
+(`NODE_ENV=development`) the cache is skipped, so content edits show up without
+restarting the dev server.
+
+Useful options:
+
+```typescript
+export const blog = createBlog({
+  contentDir: './content/posts',
+  siteUrl: 'https://example.com', // base for RSS / sitemap / JSON-LD links
+  basePath: '/blog',              // URL prefix where posts are served (default '/blog', '' for site root)
+  includeDrafts: false,           // set true to preview posts marked draft: true
+});
+```
 
 ## Query your posts
 
 ```typescript
 const posts    = await blog.getPosts();           // all published posts
-const post     = await blog.getPostBySlug('hello-world');
+const post     = await blog.getPostBySlug('hello-world');  // throws if missing
+const maybe    = await blog.findPostBySlug('hello-world'); // null if missing
 const featured = await blog.getFeaturedPosts();
 const tags     = await blog.getTags();
 const results  = await blog.search('hello');

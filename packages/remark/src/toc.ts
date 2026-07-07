@@ -54,13 +54,11 @@ export const remarkToc: Plugin<[RemarkTocOptions?], Root> = (options = {}) => {
     const headings: { depth: number; text: string; slug: string }[] = [];
     const headingPattern = new RegExp(`^${heading}$`, 'i');
     let tocIndex = -1;
-    let tocNode: Heading | null = null;
 
     visit(tree, 'heading', (node: Heading, index) => {
       const text = toString(node);
       if (headingPattern.test(text)) {
         tocIndex = index as number;
-        tocNode = node;
         return;
       }
       if (node.depth >= minDepth && node.depth <= maxDepth) {

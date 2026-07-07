@@ -64,13 +64,13 @@ export async function generateStaticParams() {
 }
 
 export async function generateMetadata({ params }: { params: { slug: string } }) {
-  const post = await blog.getPostBySlug(params.slug).catch(() => null);
+  const post = await blog.findPostBySlug(params.slug);
   if (!post) return {};
   return generatePostMetadata(post, { siteUrl: blog.siteUrl, siteName: 'My Blog' });
 }
 
 export default async function PostPage({ params }: { params: { slug: string } }) {
-  const post = await blog.getPostBySlug(params.slug).catch(() => null);
+  const post = await blog.findPostBySlug(params.slug);
   if (!post) notFound();
 
   const adjacent = await blog.getAdjacentPosts(params.slug);
@@ -143,7 +143,7 @@ export const GET = createOgImageHandler(blog, { siteName: 'My Blog' });
 import { toHtml, remarkToc, remarkEmbed } from '@yamblog/remark';
 
 export default async function PostPage({ params }: { params: { slug: string } }) {
-  const post = await blog.getPostBySlug(params.slug).catch(() => null);
+  const post = await blog.findPostBySlug(params.slug);
   if (!post) notFound();
 
   const html = await toHtml(post.content, {

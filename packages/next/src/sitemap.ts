@@ -11,9 +11,10 @@ export function createSitemapExport(
 ): () => Promise<SitemapEntry[]> {
   return async function sitemap(): Promise<SitemapEntry[]> {
     const siteUrl = options.siteUrl ?? blog.siteUrl;
+    const basePath = options.basePath ?? blog.basePath;
     const posts = await blog.getPosts();
     return posts.map(post => ({
-      url: `${siteUrl}/blog/${post.slug}`,
+      url: `${siteUrl}${basePath}/${post.slug}`,
       lastModified: post.date,
     }));
   };

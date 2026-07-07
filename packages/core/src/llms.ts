@@ -1,3 +1,4 @@
+import { normalizeBasePath } from './utils.js';
 import type { Post, LlmsTxtOptions } from './types.js';
 
 const DEFAULT_FILTER = (post: Post) => post.featured;
@@ -7,6 +8,7 @@ export function generateLlmsTxt(
   options: LlmsTxtOptions & { siteUrl: string }
 ): string {
   const { sectionTitle = 'Blog', siteUrl, filter = DEFAULT_FILTER } = options;
+  const basePath = normalizeBasePath(options.basePath ?? '/blog');
 
   const filtered = posts.filter(filter);
   const heading = `## ${sectionTitle}`;
@@ -17,7 +19,7 @@ export function generateLlmsTxt(
 
   const items = filtered
     .map(post => {
-      const url = `${siteUrl}/blog/${post.slug}`;
+      const url = `${siteUrl}${basePath}/${post.slug}`;
       return post.excerpt
         ? `- [${post.title}](${url}): ${post.excerpt}`
         : `- [${post.title}](${url})`;
