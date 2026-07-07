@@ -6,8 +6,8 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
     }
   },
   "type": "module",
@@ -37,5 +37,13 @@
   "publishConfig": {
     "access": "public"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yamblog/yamblog.git",
+    "directory": "packages/core"
+  },
+  "homepage": "https://yamblog.dev",
+  "bugs": "https://github.com/yamblog/yamblog/issues",
+  "author": "Bharat Parsiya (https://bnap.dev)"
 }

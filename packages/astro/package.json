@@ -7,8 +7,8 @@
   "type": "module",
   "exports": {
     ".": {
-      "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
     },
     "./components/BlogListPage.astro": "./src/components/BlogListPage.astro",
     "./components/BlogPostPage.astro": "./src/components/BlogPostPage.astro"
@@ -16,7 +16,8 @@
   "scripts": {
     "build": "tsc",
     "test": "bun test",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src/"
   },
   "dependencies": {
     "@yamblog/core": "^1.2.0",
@@ -42,5 +43,13 @@
   "publishConfig": {
     "access": "public"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yamblog/yamblog.git",
+    "directory": "packages/astro"
+  },
+  "homepage": "https://yamblog.dev",
+  "bugs": "https://github.com/yamblog/yamblog/issues",
+  "author": "Bharat Parsiya (https://bnap.dev)"
 }
