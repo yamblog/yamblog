@@ -8,7 +8,7 @@
 
 Drop markdown files in a folder, get a fully typed blog: posts, categories, tags, search, related posts, RSS, sitemap, OG images, JSON-LD, and `llms.txt` — with adapters for Next.js, Astro, and plain React.
 
-```
+```text
 content/posts/hello-world.md  →  https://yoursite.com/blog/hello-world
 ```
 

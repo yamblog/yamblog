@@ -1,3 +1,4 @@
+import { normalizeBasePath } from '@yamblog/core';
 import type { Post } from '@yamblog/core';
 
 type BreadcrumbItem = {
@@ -19,7 +20,7 @@ export function generatePostMetadata(
   post: Post,
   { siteUrl, siteName, basePath = '/blog' }: MetadataOptions,
 ) {
-  const url = `${siteUrl}${basePath}/${post.slug}`;
+  const url = `${siteUrl}${normalizeBasePath(basePath)}/${post.slug}`;
   const description = post.excerpt ?? post.title;
 
   return {
@@ -80,7 +81,7 @@ export function generateBlogJsonLd(
     '@type': 'Article',
     headline: post.title,
     description: post.excerpt,
-    url: `${siteUrl}${basePath}/${post.slug}`,
+    url: `${siteUrl}${normalizeBasePath(basePath)}/${post.slug}`,
     datePublished: post.date.toISOString(),
     author: {
       '@type': 'Person',

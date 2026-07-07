@@ -22,14 +22,13 @@ git push
 
 When your PR merges to `main`, the [release workflow](.github/workflows/ci.yml) will:
 
-1. Build all changed packages
-2. Run `changeset version` to bump versions and update changelogs
-3. Run `changeset publish` to publish to npm
-4. Create git tags and GitHub releases
+1. Build all packages
+2. Use `changesets/action@v1` to version packages, update changelogs, and publish to npm
+3. Create git tags and GitHub releases
 
 ## ⚠️ Do not publish locally
 
-If you have **2FA enabled** on npm, local publishing will fail with `EOTP`. The CI workflow uses an npm automation token which bypasses 2FA. If you absolutely must publish locally, temporarily disable 2FA or use an automation token.
+If you have **2FA enabled** on npm, local publishing will fail with `EOTP`. The CI workflow uses an npm automation token which bypasses 2FA. If you absolutely must publish locally, use an npm automation token.
 
 ## Emergency: fixing a bad publish
 
