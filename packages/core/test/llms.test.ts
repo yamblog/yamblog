@@ -69,4 +69,11 @@ describe('generateLlmsTxt', () => {
     expect(txt).toContain('## Blog');
     expect(txt).toContain('*(no posts)*');
   });
+
+  it('excludes drafts unless includeDrafts is passed', async () => {
+    const posts = await loadPosts({ contentDir, includeDrafts: true });
+    const base = { siteUrl: 'https://example.com', filter: () => true };
+    expect(generateLlmsTxt(posts, base)).not.toContain('Draft Post');
+    expect(generateLlmsTxt(posts, { ...base, includeDrafts: true })).toContain('Draft Post');
+  });
 });

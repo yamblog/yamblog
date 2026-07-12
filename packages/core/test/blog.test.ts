@@ -135,4 +135,49 @@ describe('createBlog', () => {
     expect(sitemap).toContain('https://example.com/articles/hello-world');
     expect(llms).toContain('https://example.com/articles/hello-world');
   });
+
+  it('keeps drafts out of generated artifacts even when includeDrafts is set', async () => {
+    const b = createBlog({ contentDir, siteUrl: 'https://example.com', includeDrafts: true });
+    expect(await b.generateRss({ title: 'T', description: 'D' })).not.toContain('Draft Post');
+    expect(await b.generateSitemap()).not.toContain('draft-post');
+    expect(await b.generateLlmsTxt({ filter: () => true })).not.toContain('Draft Post');
+    const index = await b.generateSearchIndex();
+    expect(index.some(e => e.slug === 'draft-post')).toBe(false);
+  });
+
+  it('includes drafts in generated artifacts only via their own includeDrafts option', async () => {
+    const b = createBlog({ contentDir, siteUrl: 'https://example.com', includeDrafts: true });
+    expect(await b.generateRss({ title: 'T', description: 'D', includeDrafts: true })).toContain('Draft Post');
+    expect(await b.generateSitemap({ includeDrafts: true })).toContain('draft-post');
+    const index = await b.generateSearchIndex({ includeDrafts: true });
+    expect(index.some(e => e.slug === 'draft-post')).toBe(true);
+  });
+});
+
+describe('createBlog dev-mode cache', () => {
+  it('reloads posts when content changes, reuses the cache otherwise', async () => {
+    const { mkdtempSync, writeFileSync, utimesSync } = await import('fs');
+    const { tmpdir } = await import('os');
+    const dir = mkdtempSync(join(tmpdir(), 'yamblog-dev-'));
+    const post = (title: string) => `---\ntitle: ${title}\ndate: 2024-01-01\n---\nbody`;
+    writeFileSync(join(dir, 'a.md'), post('A'));
+
+    const prevEnv = process.env.NODE_ENV;
+    process.env.NODE_ENV = 'development';
+    try {
+      const b = createBlog({ contentDir: dir });
+      const first = await b.getPosts();
+      expect(first.length).toBe(1);
+      // Unchanged content — same cached array instance
+      expect(await b.getPosts()).toBe(first);
+
+      writeFileSync(join(dir, 'b.md'), post('B'));
+      // Ensure the new file's mtime is distinguishable
+      utimesSync(join(dir, 'b.md'), new Date(), new Date(Date.now() + 1000));
+      const second = await b.getPosts();
+      expect(second.length).toBe(2);
+    } finally {
+      process.env.NODE_ENV = prevEnv;
+    }
+  });
 });

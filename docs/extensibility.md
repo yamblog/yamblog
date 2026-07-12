@@ -204,3 +204,12 @@ const blog = createBlog({
   includeDrafts: process.env.NODE_ENV === 'development',
 });
 ```
+
+Generated public artifacts — RSS, sitemap, llms.txt, and the search index —
+always exclude drafts, even with `includeDrafts` on, so a preview deployment
+can't accidentally publish them. To include drafts in one of those outputs,
+pass `includeDrafts: true` to that generator call explicitly:
+
+```typescript
+const rss = await blog.generateRss({ title: 'Preview', description: '…', includeDrafts: true });
+```

@@ -46,6 +46,19 @@ export function normalizeBasePath(basePath: string): string {
   return trimmed ? `/${trimmed}` : '';
 }
 
+/** Default URL path prefix under which posts are served. */
+export const DEFAULT_BASE_PATH = '/blog';
+
+/**
+ * Builds the canonical URL of a post: {siteUrl}{basePath}/{slug}.
+ * The single source of truth for post URL construction — RSS, sitemap,
+ * llms.txt, and the framework adapters all build links through this.
+ * basePath is normalized, and defaults to '/blog' when undefined.
+ */
+export function buildPostUrl(siteUrl: string, basePath: string | undefined, slug: string): string {
+  return `${siteUrl}${normalizeBasePath(basePath ?? DEFAULT_BASE_PATH)}/${slug}`;
+}
+
 /**
  * Generates a stable ID from a slug.
  * Format: "blog-{slug}" — safe to use as a foreign key in external services.

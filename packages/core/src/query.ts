@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync } from 'fs';
+import { readdirSync, readFileSync, statSync } from 'fs';
 import { join } from 'path';
 import { z } from 'zod';
 import { parsePost } from './parser.js';
@@ -31,6 +31,11 @@ export async function loadAllPosts<TSchema extends z.ZodObject<z.ZodRawShape> = 
 
   const posts = files.map((filename: string) => {
     const slug = slugify(filename);
+    if (!slug) {
+      throw new Error(
+        `yamblog: filename "${filename}" produced an empty slug — rename the file to include URL-safe characters, or pass a custom slugify()`,
+      );
+    }
     const raw = readFileSync(join(contentDir, filename), 'utf-8');
     return parsePost(raw, slug, schema);
   });
@@ -44,6 +49,22 @@ export async function loadAllPosts<TSchema extends z.ZodObject<z.ZodRawShape> = 
   }
 
   return posts.sort(sortBy);
+}
+
+/**
+ * Cheap fingerprint of the content directory — filenames plus mtimes, no file
+ * reads or parsing. Used to decide when the dev-mode posts cache is stale.
+ */
+export function contentSignature(contentDir: string): string {
+  try {
+    return readdirSync(contentDir)
+      .filter((f: string) => /\.mdx?$/.test(f))
+      .map((f: string) => `${f}:${statSync(join(contentDir, f)).mtimeMs}`)
+      .join('|');
+  } catch {
+    // Missing/unreadable dir — loadPosts will surface the real error
+    return 'unreadable';
+  }
 }
 
 export async function loadPosts<TSchema extends z.ZodObject<z.ZodRawShape> = typeof defaultSchema>(

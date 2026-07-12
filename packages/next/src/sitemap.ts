@@ -1,3 +1,4 @@
+import { buildPostUrl } from '@yamblog/core';
 import type { Blog, SitemapOptions } from '@yamblog/core';
 
 type SitemapEntry = {
@@ -13,8 +14,9 @@ export function createSitemapExport(
     const siteUrl = options.siteUrl ?? blog.siteUrl;
     const basePath = options.basePath ?? blog.basePath;
     const posts = await blog.getPosts();
-    return posts.map(post => ({
-      url: `${siteUrl}${basePath}/${post.slug}`,
+    const published = options.includeDrafts ? posts : posts.filter(post => !post.draft);
+    return published.map(post => ({
+      url: buildPostUrl(siteUrl, basePath, post.slug),
       lastModified: post.date,
     }));
   };

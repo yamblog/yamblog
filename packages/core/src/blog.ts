@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { loadAllPosts, loadPosts, getPostBySlug, findPostBySlug, getPostsByCategory, getPostsByTag, getFeaturedPosts, getCategories, getTags, getAdjacentPosts } from './query.js';
+import { loadAllPosts, loadPosts, contentSignature, getPostBySlug, findPostBySlug, getPostsByCategory, getPostsByTag, getFeaturedPosts, getCategories, getTags, getAdjacentPosts } from './query.js';
 import { normalizeBasePath } from './utils.js';
 import { searchPosts } from './search.js';
 import { getRelatedPosts } from './related.js';
@@ -7,18 +7,28 @@ import { generateRss } from './rss.js';
 import { generateSitemap } from './sitemap.js';
 import { generateLlmsTxt } from './llms.js';
 import { defaultSchema } from './types.js';
-import type { Blog, BlogConfig, Post, RssOptions, SitemapOptions, LlmsTxtOptions } from './types.js';
+import type { Blog, BlogConfig, Post, RssOptions, SitemapOptions, LlmsTxtOptions, SearchIndexOptions } from './types.js';
 
 export function createBlog<TSchema extends z.ZodObject<z.ZodRawShape> = typeof defaultSchema>(
   config: BlogConfig<TSchema>,
 ): Blog<TSchema> {
-  // Cache the promise so the filesystem is read only once per blog instance.
-  // In development the cache is skipped so content edits show up without
-  // restarting the dev server.
+  // Cache the promise so the filesystem is read and parsed only once per blog
+  // instance. In development the cache is invalidated when the content
+  // directory's file list or mtimes change, so edits show up without
+  // restarting the dev server while repeated calls (metadata + page +
+  // adjacent + related in one render) still share a single load.
   const isDev = process.env.NODE_ENV === 'development';
   let postsCache: Promise<Post<TSchema>[]> | null = null;
+  let cacheSignature: string | null = null;
   const getCachedPosts = () => {
-    if (isDev) return loadPosts(config);
+    if (isDev) {
+      const signature = contentSignature(config.contentDir);
+      if (postsCache === null || signature !== cacheSignature) {
+        cacheSignature = signature;
+        postsCache = loadPosts(config);
+      }
+      return postsCache;
+    }
     postsCache ??= loadPosts(config);
     return postsCache;
   };
@@ -102,9 +112,12 @@ export function createBlog<TSchema extends z.ZodObject<z.ZodRawShape> = typeof d
       return generateLlmsTxt(posts as Post[], { siteUrl: config.siteUrl ?? '', basePath, ...options });
     },
 
-    async generateSearchIndex() {
+    async generateSearchIndex(options: SearchIndexOptions = {}) {
       const posts = await getCachedPosts();
-      return (posts as Post[]).map(post => ({
+      const published = options.includeDrafts
+        ? (posts as Post[])
+        : (posts as Post[]).filter(post => !post.draft);
+      return published.map(post => ({
         id: post.id,
         slug: post.slug,
         title: post.title,

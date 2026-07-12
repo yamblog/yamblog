@@ -66,7 +66,7 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: { params: { slug: string } }) {
   const post = await blog.findPostBySlug(params.slug);
   if (!post) return {};
-  return generatePostMetadata(post, { siteUrl: blog.siteUrl, siteName: 'My Blog' });
+  return generatePostMetadata(post, { siteUrl: blog.siteUrl, basePath: blog.basePath, siteName: 'My Blog' });
 }
 
 export default async function PostPage({ params }: { params: { slug: string } }) {
@@ -76,7 +76,7 @@ export default async function PostPage({ params }: { params: { slug: string } })
   const adjacent = await blog.getAdjacentPosts(params.slug);
   const related  = await blog.getRelatedPosts(params.slug);
 
-  const jsonLd = generateBlogJsonLd(post, { siteUrl: blog.siteUrl });
+  const jsonLd = generateBlogJsonLd(post, { siteUrl: blog.siteUrl, basePath: blog.basePath });
   const breadcrumbJsonLd = generateBreadcrumbJsonLd([
     { name: 'Home', url: '/' },
     { name: 'Blog', url: '/blog' },

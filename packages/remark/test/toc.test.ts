@@ -77,4 +77,18 @@ describe('remarkToc', () => {
     expect(out).toContain('#hello-world');
     expect(out).toContain('#typescript-react');
   });
+
+  it('treats regex metacharacters in the heading option as literal text', async () => {
+    // 'C++ Guide' is an invalid regex pattern — must not throw
+    const md = `# Post\n\n## C++ Guide\n\n## Hello\n\n## World`;
+    const out = await process(md, { heading: 'C++ Guide' });
+    expect(out).not.toContain('## C++ Guide');
+    expect(out).toContain('#hello');
+
+    // Parentheses must match literally, not as a capture group
+    const md2 = `# Post\n\n## Contents (overview)\n\n## Hello\n\n## World`;
+    const out2 = await process(md2, { heading: 'Contents (overview)' });
+    expect(out2).not.toContain('## Contents (overview)');
+    expect(out2).toContain('#hello');
+  });
 });

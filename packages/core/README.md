@@ -34,7 +34,7 @@ const blog = createBlog({
   contentDir: './content/posts', // required — directory of .md files
   siteUrl: 'https://example.com', // base for RSS / sitemap / llms.txt links
   basePath: '/blog',             // URL prefix where posts are served (default '/blog', '' for site root)
-  includeDrafts: false,          // set true to preview posts marked draft: true
+  includeDrafts: false,          // set true to preview posts marked draft: true in queries
   schema: mySchema,              // custom Zod frontmatter schema
   sortBy: (a, b) => 0,           // custom sort (default: newest first)
   slugify: (filename) => '…',    // custom slug generator
@@ -42,9 +42,13 @@ const blog = createBlog({
 });
 ```
 
+`includeDrafts` affects queries only — RSS, sitemap, llms.txt, and the search
+index always exclude drafts unless that generator call is passed its own
+`includeDrafts: true`.
+
 Posts are loaded once and cached per blog instance. In development
-(`NODE_ENV=development`) the cache is skipped so content edits show up
-without restarting the dev server.
+(`NODE_ENV=development`) the cache is refreshed whenever a content file
+changes, so edits show up without restarting the dev server.
 
 Slugs are derived from filenames and sanitized into a URL-safe form:
 `My Post.md` → `my-post`. Pass a custom `slugify` to change this.

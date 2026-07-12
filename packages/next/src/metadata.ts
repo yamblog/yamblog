@@ -1,4 +1,4 @@
-import { normalizeBasePath } from '@yamblog/core';
+import { buildPostUrl } from '@yamblog/core';
 import type { Post } from '@yamblog/core';
 
 type BreadcrumbItem = {
@@ -9,7 +9,11 @@ type BreadcrumbItem = {
 type MetadataOptions = {
   siteUrl: string;
   siteName?: string;
-  /** URL path prefix where the blog is mounted. Default: '/blog' */
+  /**
+   * URL path prefix where the blog is mounted. Pass `blog.basePath` when the
+   * blog is configured with a custom base path so canonical and JSON-LD URLs
+   * match the RSS/sitemap links. Default: '/blog'
+   */
   basePath?: string;
 };
 
@@ -18,9 +22,9 @@ type MetadataOptions = {
  */
 export function generatePostMetadata(
   post: Post,
-  { siteUrl, siteName, basePath = '/blog' }: MetadataOptions,
+  { siteUrl, siteName, basePath }: MetadataOptions,
 ) {
-  const url = `${siteUrl}${normalizeBasePath(basePath)}/${post.slug}`;
+  const url = buildPostUrl(siteUrl, basePath, post.slug);
   const description = post.excerpt ?? post.title;
 
   return {
@@ -74,14 +78,14 @@ export function generateBreadcrumbJsonLd(items: BreadcrumbItem[]) {
  */
 export function generateBlogJsonLd(
   post: Post,
-  { siteUrl, basePath = '/blog' }: MetadataOptions,
+  { siteUrl, basePath }: MetadataOptions,
 ) {
   return {
     '@context': 'https://schema.org',
     '@type': 'Article',
     headline: post.title,
     description: post.excerpt,
-    url: `${siteUrl}${normalizeBasePath(basePath)}/${post.slug}`,
+    url: buildPostUrl(siteUrl, basePath, post.slug),
     datePublished: post.date.toISOString(),
     author: {
       '@type': 'Person',

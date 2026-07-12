@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'bun:test';
-import { readingTime, defaultSlugify, generateId, normalizeBasePath } from '../src/utils';
+import { readingTime, defaultSlugify, generateId, normalizeBasePath, buildPostUrl } from '../src/utils';
 
 describe('readingTime', () => {
   it('returns 1 for short content', () => {
@@ -62,6 +62,29 @@ describe('normalizeBasePath', () => {
   it('normalizes empty and root paths to the site root', () => {
     expect(normalizeBasePath('')).toBe('');
     expect(normalizeBasePath('/')).toBe('');
+  });
+});
+
+describe('buildPostUrl', () => {
+  it('joins siteUrl, basePath, and slug', () => {
+    expect(buildPostUrl('https://example.com', '/articles', 'my-post')).toBe(
+      'https://example.com/articles/my-post',
+    );
+  });
+
+  it('defaults basePath to /blog when undefined', () => {
+    expect(buildPostUrl('https://example.com', undefined, 'my-post')).toBe(
+      'https://example.com/blog/my-post',
+    );
+  });
+
+  it('normalizes messy basePath values', () => {
+    expect(buildPostUrl('https://example.com', 'articles/', 'my-post')).toBe(
+      'https://example.com/articles/my-post',
+    );
+    expect(buildPostUrl('https://example.com', '', 'my-post')).toBe(
+      'https://example.com/my-post',
+    );
   });
 });
 

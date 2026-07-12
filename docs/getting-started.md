@@ -69,8 +69,8 @@ export const blog = createBlog({
 
 `createBlog` returns a `Blog` object. All methods return Promises and are safe
 to call in parallel — results are cached after the first load. In development
-(`NODE_ENV=development`) the cache is skipped, so content edits show up without
-restarting the dev server.
+(`NODE_ENV=development`) the cache is refreshed whenever a content file
+changes, so edits show up without restarting the dev server.
 
 Useful options:
 
@@ -79,7 +79,7 @@ export const blog = createBlog({
   contentDir: './content/posts',
   siteUrl: 'https://example.com', // base for RSS / sitemap / JSON-LD links
   basePath: '/blog',              // URL prefix where posts are served (default '/blog', '' for site root)
-  includeDrafts: false,           // set true to preview posts marked draft: true
+  includeDrafts: false,           // set true to preview posts marked draft: true in queries
 });
 ```
 

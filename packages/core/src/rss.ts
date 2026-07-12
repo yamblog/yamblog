@@ -1,4 +1,4 @@
-import { normalizeBasePath } from './utils.js';
+import { normalizeBasePath, DEFAULT_BASE_PATH } from './utils.js';
 import type { Post, RssOptions } from './types.js';
 
 function escapeXml(str: string): string {
@@ -13,14 +13,16 @@ function escapeXml(str: string): string {
 /**
  * Generates an RSS 2.0 XML string for the given posts.
  * Post URLs are constructed as: {siteUrl}{basePath}/{slug}
+ * Draft posts are excluded unless `includeDrafts: true` is passed explicitly.
  */
 export function generateRss(posts: Post[], options: RssOptions & { siteUrl: string }): string {
   const { siteUrl, title, description, author, language = 'en-us' } = options;
-  const basePath = normalizeBasePath(options.basePath ?? '/blog');
+  const basePath = normalizeBasePath(options.basePath ?? DEFAULT_BASE_PATH);
   const blogUrl = `${siteUrl}${basePath}`;
-  const feedUrl = options.feedUrl ?? `${blogUrl}/rss.xml`;
+  const feedUrl = options.feedUrl ?? `${siteUrl}/feed.xml`;
+  const published = options.includeDrafts ? posts : posts.filter(post => !post.draft);
 
-  const items = posts
+  const items = published
     .map(post => {
       const url = `${blogUrl}/${post.slug}`;
       return `    <item>
@@ -35,7 +37,7 @@ export function generateRss(posts: Post[], options: RssOptions & { siteUrl: stri
     .join('\n');
 
   // Posts are typically sorted newest-first, but don't rely on it
-  const newest = posts.reduce<Date | null>(
+  const newest = published.reduce<Date | null>(
     (latest, post) => (!latest || post.date > latest ? post.date : latest),
     null,
   );

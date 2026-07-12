@@ -63,19 +63,27 @@ describe('generateRss feed metadata', () => {
       description: 'Latest',
     });
     expect(xml).toContain('xmlns:atom="http://www.w3.org/2005/Atom"');
+    // Default self URL is {siteUrl}/feed.xml — where the docs and examples mount the feed
     expect(xml).toContain(
-      '<atom:link href="https://example.com/blog/rss.xml" rel="self" type="application/rss+xml"/>',
+      '<atom:link href="https://example.com/feed.xml" rel="self" type="application/rss+xml"/>',
     );
   });
 
   it('honors a custom feedUrl', () => {
     const xml = generateRss([], {
       siteUrl: 'https://example.com',
-      feedUrl: 'https://example.com/feed.xml',
+      feedUrl: 'https://example.com/blog/rss.xml',
       title: 'My Blog',
       description: 'Latest',
     });
-    expect(xml).toContain('href="https://example.com/feed.xml"');
+    expect(xml).toContain('href="https://example.com/blog/rss.xml"');
+  });
+
+  it('excludes drafts unless includeDrafts is passed', async () => {
+    const posts = await loadPosts({ contentDir, includeDrafts: true });
+    const base = { siteUrl: 'https://example.com', title: 'My Blog', description: 'Latest' };
+    expect(generateRss(posts, base)).not.toContain('Draft Post');
+    expect(generateRss(posts, { ...base, includeDrafts: true })).toContain('Draft Post');
   });
 
   it('includes lastBuildDate from the newest post', async () => {

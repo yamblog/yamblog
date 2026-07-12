@@ -1,4 +1,6 @@
-import { searchPosts } from '@yamblog/core';
+// Import from the fs-free `/search` subpath: this module is bundled for the
+// browser, and the package root's module graph reaches node:fs via the loader.
+import { searchPosts } from '@yamblog/core/search';
 import type { Post } from '@yamblog/core';
 
 /**

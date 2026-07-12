@@ -60,8 +60,14 @@ export type RssOptions = {
   author?: string;
   /** Channel language code. Default: 'en-us' */
   language?: string;
-  /** Absolute URL of the feed itself, used for the atom:link self reference. Default: {siteUrl}{basePath}/rss.xml */
+  /** Absolute URL of the feed itself, used for the atom:link self reference. Default: {siteUrl}/feed.xml */
   feedUrl?: string;
+  /**
+   * Include posts marked `draft: true` in the feed. Off by default even when
+   * the blog is configured with `includeDrafts: true`, so preview deployments
+   * don't publish drafts to feed readers.
+   */
+  includeDrafts?: boolean;
 };
 
 export type SitemapOptions = {
@@ -69,6 +75,11 @@ export type SitemapOptions = {
   siteUrl?: string;
   /** URL path prefix for post links. Falls back to basePath set in config. Default: '/blog' */
   basePath?: string;
+  /**
+   * Include posts marked `draft: true` in the sitemap. Off by default even
+   * when the blog is configured with `includeDrafts: true`.
+   */
+  includeDrafts?: boolean;
 };
 
 export type LlmsTxtOptions = {
@@ -84,6 +95,19 @@ export type LlmsTxtOptions = {
    * Pass () => true to include all posts.
    */
   filter?: (post: Post) => boolean;
+  /**
+   * Include posts marked `draft: true`. Off by default even when the blog
+   * is configured with `includeDrafts: true`. Applied before `filter`.
+   */
+  includeDrafts?: boolean;
+};
+
+export type SearchIndexOptions = {
+  /**
+   * Include posts marked `draft: true` in the search index. Off by default
+   * even when the blog is configured with `includeDrafts: true`.
+   */
+  includeDrafts?: boolean;
 };
 
 export type RelatedPostsConfig<TSchema extends z.ZodObject<z.ZodRawShape> = typeof defaultSchema> = {
@@ -107,8 +131,12 @@ export type BlogConfig<TSchema extends z.ZodObject<z.ZodRawShape> = typeof defau
    */
   basePath?: string;
   /**
-   * Include posts marked `draft: true` in query results.
-   * Useful for previewing drafts in development. Default: false
+   * Include posts marked `draft: true` in query results (getPosts, search,
+   * getRelatedPosts, …). Useful for previewing drafts in development.
+   * Generated public artifacts — RSS, sitemap, llms.txt, and the search
+   * index — still exclude drafts unless their own `includeDrafts` option is
+   * set, so a preview deployment can't accidentally publish drafts.
+   * Default: false
    */
   includeDrafts?: boolean;
   /** Zod schema for frontmatter validation. Defaults to defaultSchema */
@@ -145,5 +173,5 @@ export type Blog<TSchema extends z.ZodObject<z.ZodRawShape> = typeof defaultSche
   generateRss: (options: RssOptions) => Promise<string>;
   generateSitemap: (options?: SitemapOptions) => Promise<string>;
   generateLlmsTxt: (options?: LlmsTxtOptions) => Promise<string>;
-  generateSearchIndex: () => Promise<SearchIndexEntry[]>;
+  generateSearchIndex: (options?: SearchIndexOptions) => Promise<SearchIndexEntry[]>;
 };
