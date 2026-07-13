@@ -167,6 +167,9 @@ const blog = createBlog({
 
 ## Custom slug generator
 
+By default, slugs are derived from filenames and sanitized into a URL-safe
+form (`My Post.md` → `my-post`). Pass `slugify` to change this:
+
 ```typescript
 const blog = createBlog({
   contentDir: './content/posts',
@@ -175,4 +178,38 @@ const blog = createBlog({
     return filename.replace(/^\d{4}-\d{2}-\d{2}-/, '').replace(/\.mdx?$/, '');
   },
 });
+```
+
+## Custom base path
+
+RSS, sitemap, and llms.txt links default to `{siteUrl}/blog/{slug}`. If your
+posts live somewhere else, set `basePath` (use `''` to mount at the site root):
+
+```typescript
+const blog = createBlog({
+  contentDir: './content/posts',
+  siteUrl: 'https://example.com',
+  basePath: '/articles', // links become https://example.com/articles/{slug}
+});
+```
+
+## Previewing drafts
+
+Posts with `draft: true` are excluded from all queries. To preview them
+locally, flip `includeDrafts` on in development:
+
+```typescript
+const blog = createBlog({
+  contentDir: './content/posts',
+  includeDrafts: process.env.NODE_ENV === 'development',
+});
+```
+
+Generated public artifacts — RSS, sitemap, llms.txt, and the search index —
+always exclude drafts, even with `includeDrafts` on, so a preview deployment
+can't accidentally publish them. To include drafts in one of those outputs,
+pass `includeDrafts: true` to that generator call explicitly:
+
+```typescript
+const rss = await blog.generateRss({ title: 'Preview', description: '…', includeDrafts: true });
 ```

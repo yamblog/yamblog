@@ -17,10 +17,10 @@
   },
   "dependencies": {
     "@astrojs/cloudflare": "^13.5.0",
-    "@astrojs/starlight": "latest",
+    "@astrojs/starlight": "^0.40.0",
     "@yamblog/core": "workspace:*",
     "@yamblog/remark": "workspace:*",
-    "astro": "^6.3.1",
+    "astro": "^6.4.5",
     "remark-directive": "^3.0.0"
   }
 }

@@ -49,14 +49,37 @@ export type AdjacentPosts<TSchema extends z.ZodObject<z.ZodRawShape> = typeof de
 export type RssOptions = {
   /** Falls back to siteUrl set in createBlog/defineBlog config */
   siteUrl?: string;
+  /** URL path prefix for post links. Falls back to basePath set in config. Default: '/blog' */
+  basePath?: string;
   title: string;
   description: string;
+  /**
+   * Feed author. Per the RSS 2.0 spec this should be an email address,
+   * e.g. 'jane@example.com (Jane Doe)' — feed validators flag bare names.
+   */
   author?: string;
+  /** Channel language code. Default: 'en-us' */
+  language?: string;
+  /** Absolute URL of the feed itself, used for the atom:link self reference. Default: {siteUrl}/feed.xml */
+  feedUrl?: string;
+  /**
+   * Include posts marked `draft: true` in the feed. Off by default even when
+   * the blog is configured with `includeDrafts: true`, so preview deployments
+   * don't publish drafts to feed readers.
+   */
+  includeDrafts?: boolean;
 };
 
 export type SitemapOptions = {
   /** Falls back to siteUrl set in createBlog/defineBlog config */
   siteUrl?: string;
+  /** URL path prefix for post links. Falls back to basePath set in config. Default: '/blog' */
+  basePath?: string;
+  /**
+   * Include posts marked `draft: true` in the sitemap. Off by default even
+   * when the blog is configured with `includeDrafts: true`.
+   */
+  includeDrafts?: boolean;
 };
 
 export type LlmsTxtOptions = {
@@ -64,12 +87,27 @@ export type LlmsTxtOptions = {
   sectionTitle?: string;
   /** Falls back to siteUrl set in createBlog/defineBlog config */
   siteUrl?: string;
+  /** URL path prefix for post links. Falls back to basePath set in config. Default: '/blog' */
+  basePath?: string;
   /**
    * Filter which posts to include.
    * Default: (post) => post.featured === true
    * Pass () => true to include all posts.
    */
   filter?: (post: Post) => boolean;
+  /**
+   * Include posts marked `draft: true`. Off by default even when the blog
+   * is configured with `includeDrafts: true`. Applied before `filter`.
+   */
+  includeDrafts?: boolean;
+};
+
+export type SearchIndexOptions = {
+  /**
+   * Include posts marked `draft: true` in the search index. Off by default
+   * even when the blog is configured with `includeDrafts: true`.
+   */
+  includeDrafts?: boolean;
 };
 
 export type RelatedPostsConfig<TSchema extends z.ZodObject<z.ZodRawShape> = typeof defaultSchema> = {
@@ -86,11 +124,26 @@ export type BlogConfig<TSchema extends z.ZodObject<z.ZodRawShape> = typeof defau
   contentDir: string;
   /** Site URL used as the base for RSS, sitemap, and JSON-LD links */
   siteUrl?: string;
+  /**
+   * URL path prefix under which posts are served, used when building
+   * RSS, sitemap, and llms.txt links. Use '' to mount posts at the site root.
+   * Default: '/blog'
+   */
+  basePath?: string;
+  /**
+   * Include posts marked `draft: true` in query results (getPosts, search,
+   * getRelatedPosts, …). Useful for previewing drafts in development.
+   * Generated public artifacts — RSS, sitemap, llms.txt, and the search
+   * index — still exclude drafts unless their own `includeDrafts` option is
+   * set, so a preview deployment can't accidentally publish drafts.
+   * Default: false
+   */
+  includeDrafts?: boolean;
   /** Zod schema for frontmatter validation. Defaults to defaultSchema */
   schema?: TSchema;
   /** Custom sort function. Default: newest first */
   sortBy?: (a: Post<TSchema>, b: Post<TSchema>) => number;
-  /** Custom slug generator. Default: strips .md extension */
+  /** Custom slug generator. Default: strips the extension and sanitizes into a URL-safe slug */
   slugify?: (filename: string) => string;
   /** Related posts configuration */
   relatedPosts?: RelatedPostsConfig<TSchema>;
@@ -100,10 +153,15 @@ export type BlogConfig<TSchema extends z.ZodObject<z.ZodRawShape> = typeof defau
 export type Blog<TSchema extends z.ZodObject<z.ZodRawShape> = typeof defaultSchema> = {
   /** Site URL provided in config, or auto-detected by defineBlog() */
   siteUrl: string;
+  /** Normalized URL path prefix for posts ('/blog' by default) */
+  basePath: string;
   /** Validates content directory, parses all markdown files, and throws on invalid content */
   validateContent: () => Promise<Post<TSchema>[]>;
   getPosts: () => Promise<Post<TSchema>[]>;
+  /** Returns the post with the given slug, or throws if it doesn't exist */
   getPostBySlug: (slug: string) => Promise<Post<TSchema>>;
+  /** Returns the post with the given slug, or null if it doesn't exist */
+  findPostBySlug: (slug: string) => Promise<Post<TSchema> | null>;
   getPostsByCategory: (category: string) => Promise<Post<TSchema>[]>;
   getPostsByTag: (tag: string) => Promise<Post<TSchema>[]>;
   getFeaturedPosts: () => Promise<Post<TSchema>[]>;
@@ -115,5 +173,5 @@ export type Blog<TSchema extends z.ZodObject<z.ZodRawShape> = typeof defaultSche
   generateRss: (options: RssOptions) => Promise<string>;
   generateSitemap: (options?: SitemapOptions) => Promise<string>;
   generateLlmsTxt: (options?: LlmsTxtOptions) => Promise<string>;
-  generateSearchIndex: () => Promise<SearchIndexEntry[]>;
+  generateSearchIndex: (options?: SearchIndexOptions) => Promise<SearchIndexEntry[]>;
 };

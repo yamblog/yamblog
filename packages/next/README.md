@@ -105,10 +105,10 @@ const breadcrumbs = generateBreadcrumbJsonLd([
 |--------|-------------|
 | `BlogListPage` | Pre-built listing component with search |
 | `BlogPostPage` | Pre-built post detail component (markdown, prev/next, related) |
-| `generatePostMetadata(post, opts)` | Next.js `Metadata` with OpenGraph + Twitter cards |
-| `generateBlogJsonLd(post, opts)` | JSON-LD `Article` schema |
+| `generatePostMetadata(post, opts)` | Next.js `Metadata` with OpenGraph + Twitter cards. `opts`: `{ siteUrl, siteName?, basePath? }` (basePath default `/blog`) |
+| `generateBlogJsonLd(post, opts)` | JSON-LD `Article` schema. `opts`: `{ siteUrl, basePath? }` |
 | `generateBreadcrumbJsonLd(items)` | JSON-LD `BreadcrumbList` schema |
 | `createStaticParams(blog)` | `generateStaticParams` helper returning `{ slug }[]` |
 | `createRssHandler(blog, opts)` | Route handler for RSS feed |
-| `createSitemapExport(blog, opts)` | Next.js sitemap export |
+| `createSitemapExport(blog, opts)` | Next.js sitemap export — uses the blog's `basePath` unless overridden |
 | `createOgImageHandler(blog, opts)` | Route handler for OG images via `@vercel/og` |

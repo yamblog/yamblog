@@ -22,10 +22,50 @@ export function readingTime(content: string): number {
 }
 
 /**
- * Default slug generator — strips .md and .mdx extensions.
+ * Default slug generator — strips .md/.mdx extensions and sanitizes the
+ * result into a URL-safe slug: lowercased, whitespace and underscores
+ * become dashes, and characters outside [a-z0-9-] are removed.
+ * "My Post.md" → "my-post"
  */
 export function defaultSlugify(filename: string): string {
-  return filename.replace(/\.mdx?$/, '');
+  return filename
+    .replace(/\.mdx?$/, '')
+    .toLowerCase()
+    .replace(/[\s_]+/g, '-')
+    .replace(/[^a-z0-9-]/g, '')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
+/**
+ * Normalizes a URL path prefix: ensures a single leading slash and no
+ * trailing slash. '' and '/' both normalize to '' (site root).
+ */
+export function normalizeBasePath(basePath: string): string {
+  const trimmed = basePath.replace(/^\/+|\/+$/g, '');
+  return trimmed ? `/${trimmed}` : '';
+}
+
+/** Default URL path prefix under which posts are served. */
+export const DEFAULT_BASE_PATH = '/blog';
+
+/**
+ * Strips trailing slashes from a site URL so joins never double a slash.
+ * 'https://example.com/' → 'https://example.com'
+ */
+export function normalizeSiteUrl(siteUrl: string): string {
+  return siteUrl.replace(/\/+$/, '');
+}
+
+/**
+ * Builds the canonical URL of a post: {siteUrl}{basePath}/{slug}.
+ * The single source of truth for post URL construction — RSS, sitemap,
+ * llms.txt, and the framework adapters all build links through this.
+ * Both parts are normalized: a trailing slash on siteUrl and a missing or
+ * trailing slash on basePath are tolerated. basePath defaults to '/blog'.
+ */
+export function buildPostUrl(siteUrl: string, basePath: string | undefined, slug: string): string {
+  return `${normalizeSiteUrl(siteUrl)}${normalizeBasePath(basePath ?? DEFAULT_BASE_PATH)}/${slug}`;
 }
 
 /**

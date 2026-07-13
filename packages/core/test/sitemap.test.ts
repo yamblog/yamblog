@@ -32,3 +32,32 @@ describe('generateSitemap', () => {
     expect(xml).toContain('2024-01-15');
   });
 });
+
+describe('generateSitemap basePath', () => {
+  it('uses a custom basePath in URLs', async () => {
+    const posts = await loadPosts({ contentDir });
+    const xml = generateSitemap(posts, { siteUrl: 'https://example.com', basePath: '/articles' });
+    expect(xml).toContain('https://example.com/articles/hello-world');
+  });
+
+  it('supports mounting at the site root with an empty basePath', async () => {
+    const posts = await loadPosts({ contentDir });
+    const xml = generateSitemap(posts, { siteUrl: 'https://example.com', basePath: '' });
+    expect(xml).toContain('<loc>https://example.com/hello-world</loc>');
+  });
+
+  it('normalizes messy basePath values', async () => {
+    const posts = await loadPosts({ contentDir });
+    const xml = generateSitemap(posts, { siteUrl: 'https://example.com', basePath: 'articles/' });
+    expect(xml).toContain('<loc>https://example.com/articles/hello-world</loc>');
+  });
+});
+
+describe('generateSitemap drafts', () => {
+  it('excludes drafts unless includeDrafts is passed', async () => {
+    const posts = await loadPosts({ contentDir, includeDrafts: true });
+    const base = { siteUrl: 'https://example.com' };
+    expect(generateSitemap(posts, base)).not.toContain('draft-post');
+    expect(generateSitemap(posts, { ...base, includeDrafts: true })).toContain('draft-post');
+  });
+});

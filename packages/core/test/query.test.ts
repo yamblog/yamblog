@@ -3,6 +3,7 @@ import { join } from 'path';
 import {
   loadPosts,
   getPostBySlug,
+  findPostBySlug,
   getPostsByCategory,
   getPostsByTag,
   getFeaturedPosts,
@@ -32,6 +33,38 @@ describe('loadPosts', () => {
       sortBy: (a, b) => a.date.getTime() - b.date.getTime(), // oldest first
     });
     expect(posts[0].slug).toBe('hello-world');
+  });
+
+  it('includes drafts when includeDrafts is true', async () => {
+    const posts = await loadPosts({ contentDir, includeDrafts: true });
+    expect(posts.length).toBe(3);
+    expect(posts.some(p => p.draft)).toBe(true);
+  });
+
+  it('throws a descriptive error when a filename produces an empty slug', async () => {
+    const { mkdtempSync, writeFileSync, rmSync } = await import('fs');
+    const { tmpdir } = await import('os');
+    const dir = mkdtempSync(join(tmpdir(), 'yamblog-slug-'));
+    try {
+      // Sanitizes to an empty slug: no [a-z0-9] characters at all
+      writeFileSync(join(dir, '???.md'), '---\ntitle: T\ndate: 2024-01-01\n---\nbody');
+      expect(loadPosts({ contentDir: dir })).rejects.toThrow(/produced an empty slug.*\?\?\?\.md|"\?\?\?\.md" produced an empty slug/);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+});
+
+describe('findPostBySlug', () => {
+  it('returns the post with matching slug', async () => {
+    const posts = await loadPosts({ contentDir });
+    const post = findPostBySlug(posts, 'hello-world');
+    expect(post?.title).toBe('Hello World');
+  });
+
+  it('returns null for an unknown slug', async () => {
+    const posts = await loadPosts({ contentDir });
+    expect(findPostBySlug(posts, 'nonexistent')).toBeNull();
   });
 });
 

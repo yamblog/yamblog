@@ -85,3 +85,21 @@ describe('generateBreadcrumbJsonLd', () => {
     expect(schema.itemListElement[2].item).toBe('https://example.com/blog/hello-world');
   });
 });
+
+describe('basePath handling', () => {
+  it('uses a custom basePath in canonical and JSON-LD URLs', () => {
+    const meta = generatePostMetadata(mockPost, { siteUrl, basePath: '/articles' });
+    expect((meta as any).alternates?.canonical).toBe('https://example.com/articles/hello-world');
+
+    const jsonLd = generateBlogJsonLd(mockPost, { siteUrl, basePath: '/articles' });
+    expect(jsonLd.url).toBe('https://example.com/articles/hello-world');
+  });
+
+  it('normalizes messy basePath values', () => {
+    const meta = generatePostMetadata(mockPost, { siteUrl, basePath: 'blog/' });
+    expect((meta as any).alternates?.canonical).toBe('https://example.com/blog/hello-world');
+
+    const jsonLd = generateBlogJsonLd(mockPost, { siteUrl, basePath: '/blog/' });
+    expect(jsonLd.url).toBe('https://example.com/blog/hello-world');
+  });
+});

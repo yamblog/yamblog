@@ -17,6 +17,10 @@ on:
         default: false
         type: boolean
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
 jobs:
   ci:
     runs-on: ubuntu-latest
@@ -54,11 +58,16 @@ jobs:
             bun run build:changed -- --all
           fi
 
+      # `bun run test` builds all packages first — adapter tests import
+      # @yamblog/core from its dist output, so a full build must exist.
       - name: Run tests
         run: bun run test
 
       - name: Typecheck
         run: bun run typecheck
+
+      - name: Lint
+        run: bun run lint
 
   release:
     needs: ci

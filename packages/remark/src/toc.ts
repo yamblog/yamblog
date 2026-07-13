@@ -52,15 +52,14 @@ export const remarkToc: Plugin<[RemarkTocOptions?], Root> = (options = {}) => {
   return (tree: Root) => {
     // 1. Collect all headings (excluding the TOC placeholder itself)
     const headings: { depth: number; text: string; slug: string }[] = [];
-    const headingPattern = new RegExp(`^${heading}$`, 'i');
+    // Escape regex metacharacters — `heading` is user input, not a pattern
+    const headingPattern = new RegExp(`^${heading.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i');
     let tocIndex = -1;
-    let tocNode: Heading | null = null;
 
     visit(tree, 'heading', (node: Heading, index) => {
       const text = toString(node);
       if (headingPattern.test(text)) {
         tocIndex = index as number;
-        tocNode = node;
         return;
       }
       if (node.depth >= minDepth && node.depth <= maxDepth) {

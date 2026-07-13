@@ -12,11 +12,12 @@
     "validate:content": "bun run scripts/validate-content.ts",
     "build": "bun run validate:content && bun run --filter './packages/*' build",
     "build:changed": "bun run validate:content && node scripts/build-changed.mjs",
-    "test": "bun run --filter './packages/*' test",
+    "test": "bun run build && bun run test:packages",
+    "test:packages": "bun run --filter './packages/*' test",
     "typecheck": "bun run --filter './packages/*' typecheck",
-    "lint": "bun run --filter './packages/*' lint",
+    "lint": "eslint packages/*/src/",
     "dev:website": "bun run --filter website dev",
-    "example:next": "bun run --filter with-nextjs dev",
+    "example:next": "bun run --filter with-next dev",
     "changeset": "changeset",
     "version:packages": "changeset version",
     "release": "changeset publish"
@@ -24,6 +25,8 @@
   "devDependencies": {
     "@changesets/cli": "2.31.0",
     "@types/node": "25.6.2",
-    "typescript": "6.0.3"
+    "eslint": "^9.39.0",
+    "typescript": "6.0.3",
+    "typescript-eslint": "^8.46.4"
   }
 }
