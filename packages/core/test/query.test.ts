@@ -43,12 +43,16 @@ describe('loadPosts', () => {
   });
 
   it('throws a descriptive error when a filename produces an empty slug', async () => {
-    const { mkdtempSync, writeFileSync } = await import('fs');
+    const { mkdtempSync, writeFileSync, rmSync } = await import('fs');
     const { tmpdir } = await import('os');
     const dir = mkdtempSync(join(tmpdir(), 'yamblog-slug-'));
-    // Sanitizes to an empty slug: no [a-z0-9] characters at all
-    writeFileSync(join(dir, '???.md'), '---\ntitle: T\ndate: 2024-01-01\n---\nbody');
-    expect(loadPosts({ contentDir: dir })).rejects.toThrow(/produced an empty slug.*\?\?\?\.md|"\?\?\?\.md" produced an empty slug/);
+    try {
+      // Sanitizes to an empty slug: no [a-z0-9] characters at all
+      writeFileSync(join(dir, '???.md'), '---\ntitle: T\ndate: 2024-01-01\n---\nbody');
+      expect(loadPosts({ contentDir: dir })).rejects.toThrow(/produced an empty slug.*\?\?\?\.md|"\?\?\?\.md" produced an empty slug/);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 });
 

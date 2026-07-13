@@ -3,7 +3,7 @@ export { defineBlog } from './define.js';
 export type { DefineBlogConfig } from './define.js';
 export { validateContent, validateContentSync } from './validate.js';
 export { PostNotFoundError } from './errors.js';
-export { resolvePath, defaultSlugify, normalizeBasePath, buildPostUrl, DEFAULT_BASE_PATH } from './utils.js';
+export { resolvePath, defaultSlugify, normalizeBasePath, normalizeSiteUrl, buildPostUrl, DEFAULT_BASE_PATH } from './utils.js';
 export { defaultSchema } from './types.js';
 export { generateLlmsTxt } from './llms.js';
 export { searchPosts } from './search.js';

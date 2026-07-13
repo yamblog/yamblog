@@ -50,13 +50,22 @@ export function normalizeBasePath(basePath: string): string {
 export const DEFAULT_BASE_PATH = '/blog';
 
 /**
+ * Strips trailing slashes from a site URL so joins never double a slash.
+ * 'https://example.com/' → 'https://example.com'
+ */
+export function normalizeSiteUrl(siteUrl: string): string {
+  return siteUrl.replace(/\/+$/, '');
+}
+
+/**
  * Builds the canonical URL of a post: {siteUrl}{basePath}/{slug}.
  * The single source of truth for post URL construction — RSS, sitemap,
  * llms.txt, and the framework adapters all build links through this.
- * basePath is normalized, and defaults to '/blog' when undefined.
+ * Both parts are normalized: a trailing slash on siteUrl and a missing or
+ * trailing slash on basePath are tolerated. basePath defaults to '/blog'.
  */
 export function buildPostUrl(siteUrl: string, basePath: string | undefined, slug: string): string {
-  return `${siteUrl}${normalizeBasePath(basePath ?? DEFAULT_BASE_PATH)}/${slug}`;
+  return `${normalizeSiteUrl(siteUrl)}${normalizeBasePath(basePath ?? DEFAULT_BASE_PATH)}/${slug}`;
 }
 
 /**
