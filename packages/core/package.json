@@ -1,6 +1,6 @@
 {
   "name": "@yamblog/core",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Framework-agnostic markdown blog engine",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
