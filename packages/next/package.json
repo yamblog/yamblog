@@ -1,6 +1,6 @@
 {
   "name": "@yamblog/next",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Next.js adapter for @yamblog/core",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -18,7 +18,7 @@
     "lint": "eslint src/"
   },
   "dependencies": {
-    "@yamblog/core": "^1.2.0",
+    "@yamblog/core": "^2.0.0",
     "react-markdown": "^9.0.0",
     "@vercel/og": "^0.6.0"
   },
