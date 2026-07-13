@@ -5,7 +5,7 @@
  * with zero casts, and that the default schema still works with no generic.
  */
 import { z } from 'zod';
-import { defineBlog, createBlog, defaultSchema, PostNotFoundError } from '../src/index.js';
+import { defineBlog, createBlog, defaultSchema, PostNotFoundError, validateContent, validateContentSync } from '../src/index.js';
 import type { Post, Blog, AdjacentPosts } from '../src/index.js';
 
 type Equal<X, Y> = (<T>() => T extends X ? 1 : 2) extends <T>() => T extends Y ? 1 : 2 ? true : false;
@@ -67,6 +67,14 @@ function customSchemaSync() {
 const viaCreate = createBlog({ contentDir: 'x', schema: projectSchema });
 expectType<Blog<typeof projectSchema>>(viaCreate);
 
+// standalone validateContent/validateContentSync forward the schema generic
+async function validateHelpers() {
+  const sync = validateContentSync({ contentDir: 'x', schema: projectSchema });
+  expectType<string>(sync[0]!.company);
+  const viaAsync = await validateContent({ contentDir: 'x', schema: projectSchema });
+  expectType<string>(viaAsync[0]!.company);
+}
+
 // ---------------------------------------------------------------------------
 // Zero-config / string-arg overloads still resolve to the default schema
 // ---------------------------------------------------------------------------
@@ -111,6 +119,7 @@ function errorNarrowing(err: unknown) {
 // Silence unused-symbol noise: reference everything once
 void customSchemaAsync;
 void customSchemaSync;
+void validateHelpers;
 void defaultSchemaFields;
 void nullability;
 void errorNarrowing;

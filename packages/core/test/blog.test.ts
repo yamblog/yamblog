@@ -165,6 +165,18 @@ describe('createBlog', () => {
     const index = await b.generateSearchIndex({ includeDrafts: true });
     expect(index.some(e => e.slug === 'draft-post')).toBe(true);
   });
+
+  it('generator includeDrafts works even when the blog config excludes drafts', async () => {
+    // Regression: drafts used to be stripped at load time, making the
+    // per-generator opt-in a no-op with the default config
+    const b = createBlog({ contentDir, siteUrl: 'https://example.com' });
+    expect((await b.getPosts()).length).toBe(2); // queries still exclude drafts
+    expect(await b.generateRss({ title: 'T', description: 'D', includeDrafts: true })).toContain('Draft Post');
+    expect(await b.generateSitemap({ includeDrafts: true })).toContain('draft-post');
+    expect(await b.generateLlmsTxt({ filter: () => true, includeDrafts: true })).toContain('Draft Post');
+    const index = await b.generateSearchIndex({ includeDrafts: true });
+    expect(index.some(e => e.slug === 'draft-post')).toBe(true);
+  });
 });
 
 describe('createBlog sync API', () => {

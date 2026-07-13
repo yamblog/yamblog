@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { loadAllPostsSync, loadPostsSync, contentSignature, getPostBySlug, findPostBySlug, getPostsByCategory, getPostsByTag, getFeaturedPosts, getCategories, getTags, getAdjacentPosts } from './query.js';
+import { loadAllPostsSync, contentSignature, getPostBySlug, findPostBySlug, getPostsByCategory, getPostsByTag, getFeaturedPosts, getCategories, getTags, getAdjacentPosts } from './query.js';
 import { normalizeBasePath } from './utils.js';
 import { searchPosts } from './search.js';
 import { getRelatedPosts } from './related.js';
@@ -20,19 +20,36 @@ export function createBlog<TSchema extends z.ZodObject<z.ZodRawShape> = typeof d
   // restarting the dev server while repeated calls (metadata + page +
   // adjacent + related in one render) still share a single load.
   const isDev = process.env.NODE_ENV === 'development';
-  let postsCache: Post<TSchema>[] | null = null;
+  // Two caches over one load: `allPostsCache` keeps every non-draft-filtered
+  // post so the artifact generators can honor their own `includeDrafts`
+  // option regardless of the blog config; `queryPostsCache` is the
+  // config-filtered view served to query methods.
+  let allPostsCache: Post<TSchema>[] | null = null;
+  let queryPostsCache: Post<TSchema>[] | null = null;
   let cacheSignature: string | null = null;
-  const getCachedPosts = (): Post<TSchema>[] => {
-    if (isDev) {
-      const signature = contentSignature(config.contentDir);
-      if (postsCache === null || signature !== cacheSignature) {
-        cacheSignature = signature;
-        postsCache = loadPostsSync(config);
-      }
-      return postsCache;
+  const invalidateIfStale = () => {
+    if (!isDev) return;
+    const signature = contentSignature(config.contentDir);
+    if (signature !== cacheSignature) {
+      cacheSignature = signature;
+      allPostsCache = null;
+      queryPostsCache = null;
     }
-    postsCache ??= loadPostsSync(config);
-    return postsCache;
+  };
+  // Full post set minus nothing but sorting/validation — generators filter
+  // drafts themselves based on their own options.
+  const getAllPosts = (): Post<TSchema>[] => {
+    invalidateIfStale();
+    allPostsCache ??= loadAllPostsSync(config);
+    return allPostsCache;
+  };
+  // Query view: drafts stripped unless the blog config opts in.
+  const getCachedPosts = (): Post<TSchema>[] => {
+    invalidateIfStale();
+    queryPostsCache ??= config.includeDrafts
+      ? getAllPosts()
+      : getAllPosts().filter(post => !(post as Post).draft);
+    return queryPostsCache;
   };
 
   const basePath = normalizeBasePath(config.basePath ?? '/blog');
@@ -50,13 +67,13 @@ export function createBlog<TSchema extends z.ZodObject<z.ZodRawShape> = typeof d
   const getCategoriesSync = () => getCategories(getCachedPosts());
   const getTagsSync = () => getTags(getCachedPosts());
   const generateRssSync = (options: RssOptions) =>
-    generateRss(getCachedPosts() as Post[], { siteUrl: config.siteUrl ?? '', basePath, ...options });
+    generateRss(getAllPosts() as Post[], { siteUrl: config.siteUrl ?? '', basePath, ...options });
   const generateSitemapSync = (options: SitemapOptions = {}) =>
-    generateSitemap(getCachedPosts() as Post[], { siteUrl: config.siteUrl ?? '', basePath, ...options });
+    generateSitemap(getAllPosts() as Post[], { siteUrl: config.siteUrl ?? '', basePath, ...options });
   const generateLlmsTxtSync = (options: LlmsTxtOptions = {}) =>
-    generateLlmsTxt(getCachedPosts() as Post[], { siteUrl: config.siteUrl ?? '', basePath, ...options });
+    generateLlmsTxt(getAllPosts() as Post[], { siteUrl: config.siteUrl ?? '', basePath, ...options });
   const generateSearchIndexSync = (options: SearchIndexOptions = {}): SearchIndexEntry[] => {
-    const posts = getCachedPosts() as Post[];
+    const posts = getAllPosts() as Post[];
     const published = options.includeDrafts ? posts : posts.filter(post => !post.draft);
     return published.map(post => ({
       id: post.id,
