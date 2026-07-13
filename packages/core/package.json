@@ -23,12 +23,15 @@
     "lint": "eslint src/"
   },
   "dependencies": {
-    "gray-matter": "^4.0.3",
+    "gray-matter": "^4.0.3"
+  },
+  "peerDependencies": {
     "zod": "^3.22.4"
   },
   "devDependencies": {
     "@types/node": "^25.0.0",
-    "typescript": "^6.0.0"
+    "typescript": "^6.0.0",
+    "zod": "^3.22.4"
   },
   "keywords": [
     "blog",
