@@ -11,6 +11,7 @@ import {
   getTags,
   getAdjacentPosts,
 } from '../src/query';
+import { PostNotFoundError } from '../src/errors';
 
 const contentDir = join(import.meta.dir, 'fixtures');
 
@@ -81,6 +82,19 @@ describe('getPostBySlug', () => {
       'Post not found: nonexistent',
     );
   });
+
+  it('throws a typed PostNotFoundError carrying the slug', async () => {
+    const posts = await loadPosts({ contentDir });
+    try {
+      getPostBySlug(posts, 'nonexistent');
+      expect.unreachable('should have thrown');
+    } catch (err) {
+      expect(err).toBeInstanceOf(PostNotFoundError);
+      expect(err).toBeInstanceOf(Error);
+      expect((err as PostNotFoundError).slug).toBe('nonexistent');
+      expect((err as PostNotFoundError).name).toBe('PostNotFoundError');
+    }
+  });
 });
 
 describe('getPostsByCategory', () => {
@@ -148,5 +162,10 @@ describe('getAdjacentPosts', () => {
     const posts = await loadPosts({ contentDir });
     const { prev } = getAdjacentPosts(posts, 'typescript-tips');
     expect(prev).toBeNull();
+  });
+
+  it('throws PostNotFoundError for an unknown slug', async () => {
+    const posts = await loadPosts({ contentDir });
+    expect(() => getAdjacentPosts(posts, 'nonexistent')).toThrow(PostNotFoundError);
   });
 });

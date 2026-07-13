@@ -27,6 +27,38 @@ const llms     = await blog.generateLlmsTxt();
 const index    = await blog.generateSearchIndex(); // lightweight JSON for client search
 ```
 
+Every method also has a synchronous twin — the engine reads local markdown
+files, so there is no real async work. Use the sync variants in Pages Router
+`getStaticProps`, module-scope constants, standalone build scripts, or any
+non-async context:
+
+```ts
+const posts   = blog.getPostsSync();
+const post    = blog.getPostBySlugSync('hello-world');   // throws PostNotFoundError
+const maybe   = blog.findPostBySlugSync('hello-world');  // null if missing
+const rss     = blog.generateRssSync({ title: 'My Blog', description: 'Latest' });
+const sitemap = blog.generateSitemapSync();
+```
+
+## Not-found handling
+
+`getPostBySlug` throws a typed `PostNotFoundError` (subclass of `Error`, with
+a `slug` field), so no more string-matching error messages:
+
+```ts
+import { PostNotFoundError } from '@yamblog/core';
+
+try {
+  const post = await blog.getPostBySlug(slug);
+} catch (err) {
+  if (err instanceof PostNotFoundError) return notFound(); // err.slug available
+  throw err;
+}
+
+// or skip try/catch entirely:
+const post = await blog.findPostBySlug(slug); // Post | null
+```
+
 ## Configuration
 
 ```ts
@@ -105,17 +137,28 @@ Computed fields added automatically: `id` (`"blog-{slug}"`), `slug`, `readingTim
 
 ## Custom schema
 
+The schema's inferred type is baked into the returned `Blog`, so custom
+frontmatter fields are fully typed on every method — no casts, no `any`:
+
 ```ts
 import { createBlog, defaultSchema } from '@yamblog/core';
 import { z } from 'zod';
 
-const blog = createBlog({
-  contentDir: './content/posts',
-  schema: defaultSchema.extend({
-    videoUrl: z.string().url().optional(),
-  }),
+const projectSchema = defaultSchema.extend({
+  company: z.string(),
+  technologies: z.array(z.string()),
+  videoUrl: z.string().url().optional(),
 });
-// posts are now typed with `videoUrl` included
+
+const projects = createBlog({
+  contentDir: './content/projects',
+  schema: projectSchema,
+});
+
+const p = await projects.getPostBySlug('acme');
+p.company;      // string — typed automatically
+p.technologies; // string[]
+p.readingTime;  // number — engine fields still present
 ```
 
 ## API
@@ -138,6 +181,9 @@ const blog = createBlog({
 | `generateLlmsTxt(options?)` | `llms.txt` blog section markdown |
 | `generateSearchIndex()` | Lightweight JSON array for client-side search |
 | `validateContent()` | Parses everything, throws on invalid content |
+
+Every method above also exists as a `…Sync` variant with the same signature
+minus the `Promise` (e.g. `getPostsSync()`, `generateRssSync(options)`).
 
 ## Stable blog ID
 

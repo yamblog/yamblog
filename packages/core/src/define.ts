@@ -36,6 +36,8 @@ function resolveContentDir(contentDir: string): string {
  * - Content dir defaults to `src/content/posts` relative to cwd
  * - Site URL is auto-detected from SITE / PUBLIC_SITE_URL / NEXT_PUBLIC_BASE_URL / VERCEL_URL
  * - Pass a custom Zod schema to add typed custom frontmatter fields
+ * - Every method has a synchronous twin (`getPostsSync`, …) for Pages Router,
+ *   module-scope constants, and standalone build scripts
  *
  * @example
  * // zero config — returns Blog<typeof defaultSchema>
@@ -46,9 +48,23 @@ function resolveContentDir(contentDir: string): string {
  * export const blog = defineBlog('content/posts');
  *
  * @example
- * // custom schema — returns Blog<typeof mySchema>, posts include extra fields
- * const mySchema = defaultSchema.extend({ authorWebpage: z.string().url().optional() });
- * export const blog = defineBlog({ contentDir: 'content/posts', schema: mySchema });
+ * // custom schema — the schema's fields are baked into the returned Post
+ * // type, so custom frontmatter is fully typed with no casts:
+ * const projectSchema = defaultSchema.extend({
+ *   company: z.string(),
+ *   technologies: z.array(z.string()),
+ * });
+ * export const projects = defineBlog({ contentDir: 'content/projects', schema: projectSchema });
+ *
+ * const p = await projects.getPostBySlug('acme');
+ * p.company;      // string — typed, no `as` cast
+ * p.technologies; // string[]
+ *
+ * @example
+ * // sync API — zero await, zero Promise types (build scripts, Pages Router)
+ * const blog = defineBlog('content/posts');
+ * const posts = blog.getPostsSync();
+ * const rss = blog.generateRssSync({ title: 'My Blog', description: '…' });
  */
 export function defineBlog(): Blog<typeof defaultSchema>;
 export function defineBlog(contentDir: string, siteUrl?: string): Blog<typeof defaultSchema>;
