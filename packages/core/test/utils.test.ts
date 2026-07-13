@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'bun:test';
-import { readingTime, defaultSlugify, generateId, normalizeBasePath, buildPostUrl } from '../src/utils';
+import { readingTime, defaultSlugify, generateId, normalizeBasePath, normalizeSiteUrl, buildPostUrl } from '../src/utils';
 
 describe('readingTime', () => {
   it('returns 1 for short content', () => {
@@ -65,6 +65,13 @@ describe('normalizeBasePath', () => {
   });
 });
 
+describe('normalizeSiteUrl', () => {
+  it('strips trailing slashes only', () => {
+    expect(normalizeSiteUrl('https://example.com/')).toBe('https://example.com');
+    expect(normalizeSiteUrl('https://example.com')).toBe('https://example.com');
+  });
+});
+
 describe('buildPostUrl', () => {
   it('joins siteUrl, basePath, and slug', () => {
     expect(buildPostUrl('https://example.com', '/articles', 'my-post')).toBe(
@@ -83,6 +90,15 @@ describe('buildPostUrl', () => {
       'https://example.com/articles/my-post',
     );
     expect(buildPostUrl('https://example.com', '', 'my-post')).toBe(
+      'https://example.com/my-post',
+    );
+  });
+
+  it('tolerates a trailing slash on siteUrl', () => {
+    expect(buildPostUrl('https://example.com/', '/blog', 'my-post')).toBe(
+      'https://example.com/blog/my-post',
+    );
+    expect(buildPostUrl('https://example.com/', '', 'my-post')).toBe(
       'https://example.com/my-post',
     );
   });

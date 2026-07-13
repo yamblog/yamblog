@@ -156,7 +156,7 @@ describe('createBlog', () => {
 
 describe('createBlog dev-mode cache', () => {
   it('reloads posts when content changes, reuses the cache otherwise', async () => {
-    const { mkdtempSync, writeFileSync, utimesSync } = await import('fs');
+    const { mkdtempSync, writeFileSync, utimesSync, rmSync } = await import('fs');
     const { tmpdir } = await import('os');
     const dir = mkdtempSync(join(tmpdir(), 'yamblog-dev-'));
     const post = (title: string) => `---\ntitle: ${title}\ndate: 2024-01-01\n---\nbody`;
@@ -178,6 +178,7 @@ describe('createBlog dev-mode cache', () => {
       expect(second.length).toBe(2);
     } finally {
       process.env.NODE_ENV = prevEnv;
+      rmSync(dir, { recursive: true, force: true });
     }
   });
 });

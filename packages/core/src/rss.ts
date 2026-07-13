@@ -1,4 +1,4 @@
-import { normalizeBasePath, DEFAULT_BASE_PATH } from './utils.js';
+import { normalizeBasePath, normalizeSiteUrl, DEFAULT_BASE_PATH } from './utils.js';
 import type { Post, RssOptions } from './types.js';
 
 function escapeXml(str: string): string {
@@ -16,7 +16,8 @@ function escapeXml(str: string): string {
  * Draft posts are excluded unless `includeDrafts: true` is passed explicitly.
  */
 export function generateRss(posts: Post[], options: RssOptions & { siteUrl: string }): string {
-  const { siteUrl, title, description, author, language = 'en-us' } = options;
+  const { title, description, author, language = 'en-us' } = options;
+  const siteUrl = normalizeSiteUrl(options.siteUrl);
   const basePath = normalizeBasePath(options.basePath ?? DEFAULT_BASE_PATH);
   const blogUrl = `${siteUrl}${basePath}`;
   const feedUrl = options.feedUrl ?? `${siteUrl}/feed.xml`;
