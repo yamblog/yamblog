@@ -64,6 +64,12 @@ jobs:
         run: git push origin --tags
 
       - name: Create GitHub release
-        run: gh release create "$GITHUB_REF_NAME" --generate-notes --verify-tag
+        # Idempotent: re-runs and manually pre-created releases are fine
+        run: |
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            echo "Release $GITHUB_REF_NAME already exists — skipping"
+          else
+            gh release create "$GITHUB_REF_NAME" --generate-notes --verify-tag
+          fi
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
