@@ -5,8 +5,11 @@ Framework-agnostic markdown blog engine. File-based, type-safe, zero-config.
 ## Install
 
 ```bash
-npm install @yamblog/core
+npm install @yamblog/core zod
 ```
+
+`zod` (^3.22) is a peer dependency — schemas you pass to `createBlog` are
+built with your own zod instance, so there's never a duplicate copy.
 
 ## Quick start
 
