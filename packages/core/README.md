@@ -9,7 +9,8 @@ npm install @yamblog/core zod
 ```
 
 `zod` (^3.22) is a peer dependency — schemas you pass to `createBlog` are
-built with your own zod instance, so there's never a duplicate copy.
+built with your own zod, so core resolves to that same instance instead of
+bundling its own copy.
 
 ## Quick start
 
