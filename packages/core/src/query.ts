@@ -3,17 +3,20 @@ import { join } from 'path';
 import { z } from 'zod';
 import { parsePost } from './parser.js';
 import { defaultSlugify } from './utils.js';
+import { PostNotFoundError } from './errors.js';
 import type { Post, BlogConfig, AdjacentPosts } from './types.js';
 import { defaultSchema } from './types.js';
 
 /**
- * Reads all .md files from contentDir, parses them, filters drafts, and sorts.
+ * Reads all .md files from contentDir, parses them, and sorts.
  * This is the single source of truth — all other query functions operate on
- * the loaded array rather than re-reading the filesystem.
+ * the loaded array rather than re-reading the filesystem. The work is
+ * entirely synchronous (local file reads + parsing); the async `loadAllPosts`
+ * is a thin wrapper for API compatibility.
  */
-export async function loadAllPosts<TSchema extends z.ZodObject<z.ZodRawShape> = typeof defaultSchema>(
+export function loadAllPostsSync<TSchema extends z.ZodObject<z.ZodRawShape> = typeof defaultSchema>(
   config: BlogConfig<TSchema>,
-): Promise<Post<TSchema>[]> {
+): Post<TSchema>[] {
   const { contentDir } = config;
   const slugify = config.slugify ?? defaultSlugify;
   const sortBy = config.sortBy ?? ((a, b) => (b.date as Date).getTime() - (a.date as Date).getTime());
@@ -51,6 +54,12 @@ export async function loadAllPosts<TSchema extends z.ZodObject<z.ZodRawShape> = 
   return posts.sort(sortBy);
 }
 
+export async function loadAllPosts<TSchema extends z.ZodObject<z.ZodRawShape> = typeof defaultSchema>(
+  config: BlogConfig<TSchema>,
+): Promise<Post<TSchema>[]> {
+  return loadAllPostsSync(config);
+}
+
 /**
  * Cheap fingerprint of the content directory — filenames plus mtimes, no file
  * reads or parsing. Used to decide when the dev-mode posts cache is stale.
@@ -67,20 +76,26 @@ export function contentSignature(contentDir: string): string {
   }
 }
 
+export function loadPostsSync<TSchema extends z.ZodObject<z.ZodRawShape> = typeof defaultSchema>(
+  config: BlogConfig<TSchema>,
+): Post<TSchema>[] {
+  const posts = loadAllPostsSync(config);
+  if (config.includeDrafts) return posts;
+  return posts.filter(post => !(post as Post).draft);
+}
+
 export async function loadPosts<TSchema extends z.ZodObject<z.ZodRawShape> = typeof defaultSchema>(
   config: BlogConfig<TSchema>,
 ): Promise<Post<TSchema>[]> {
-  const posts = await loadAllPosts(config);
-  if (config.includeDrafts) return posts;
-  return posts.filter(post => !(post as Post).draft);
+  return loadPostsSync(config);
 }
 
 export function getPostBySlug<TSchema extends z.ZodObject<z.ZodRawShape> = typeof defaultSchema>(
   posts: Post<TSchema>[],
   slug: string,
 ): Post<TSchema> {
-  const post = posts.find(p => p.slug === slug);
-  if (!post) throw new Error(`Post not found: ${slug}`);
+  const post = findPostBySlug(posts, slug);
+  if (!post) throw new PostNotFoundError(slug);
   return post;
 }
 
@@ -128,7 +143,7 @@ export function getAdjacentPosts<TSchema extends z.ZodObject<z.ZodRawShape> = ty
   slug: string,
 ): AdjacentPosts<TSchema> {
   const index = posts.findIndex(p => p.slug === slug);
-  if (index === -1) throw new Error(`Post not found: ${slug}`);
+  if (index === -1) throw new PostNotFoundError(slug);
   return {
     prev: index > 0 ? posts[index - 1]! : null,
     next: index < posts.length - 1 ? posts[index + 1]! : null,

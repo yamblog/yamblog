@@ -84,6 +84,10 @@ const sitemap  = await blog.generateSitemap();
 const llms     = await blog.generateLlmsTxt();
 ```
 
+Every method also has a synchronous twin (`getPostsSync()`, `generateRssSync(…)`, …)
+for Pages Router, module-scope constants, and standalone build scripts. Missing
+posts throw a typed `PostNotFoundError` — catch with `instanceof`, no string matching.
+
 Custom typed frontmatter:
 
 ```ts
@@ -96,7 +100,9 @@ export const blog = defineBlog({
     videoUrl: z.string().url().optional(),
   }),
 });
-// posts are now typed with `videoUrl` included
+
+const post = await blog.getPostBySlug('hello');
+post.videoUrl; // string | undefined — typed automatically, no casts
 ```
 
 > **Note:** `.mdx` files are picked up alongside `.md`, but content is rendered as plain markdown — JSX/MDX components are not executed.

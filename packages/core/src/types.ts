@@ -149,7 +149,12 @@ export type BlogConfig<TSchema extends z.ZodObject<z.ZodRawShape> = typeof defau
   relatedPosts?: RelatedPostsConfig<TSchema>;
 };
 
-// Return type of createBlog()
+// Return type of createBlog().
+// Every method has a synchronous twin (`getPostsSync`, …): the engine's work —
+// reading local .md files, parsing frontmatter, validating — is inherently
+// synchronous, so the async methods are thin wrappers kept for compatibility.
+// Use the sync variants in Pages Router `getStaticProps`, module-scope
+// constants, and standalone build scripts.
 export type Blog<TSchema extends z.ZodObject<z.ZodRawShape> = typeof defaultSchema> = {
   /** Site URL provided in config, or auto-detected by defineBlog() */
   siteUrl: string;
@@ -157,21 +162,39 @@ export type Blog<TSchema extends z.ZodObject<z.ZodRawShape> = typeof defaultSche
   basePath: string;
   /** Validates content directory, parses all markdown files, and throws on invalid content */
   validateContent: () => Promise<Post<TSchema>[]>;
+  validateContentSync: () => Post<TSchema>[];
   getPosts: () => Promise<Post<TSchema>[]>;
-  /** Returns the post with the given slug, or throws if it doesn't exist */
+  getPostsSync: () => Post<TSchema>[];
+  /** Returns the post with the given slug, or throws PostNotFoundError if it doesn't exist */
   getPostBySlug: (slug: string) => Promise<Post<TSchema>>;
+  /** Returns the post with the given slug, or throws PostNotFoundError if it doesn't exist */
+  getPostBySlugSync: (slug: string) => Post<TSchema>;
   /** Returns the post with the given slug, or null if it doesn't exist */
   findPostBySlug: (slug: string) => Promise<Post<TSchema> | null>;
+  /** Returns the post with the given slug, or null if it doesn't exist */
+  findPostBySlugSync: (slug: string) => Post<TSchema> | null;
   getPostsByCategory: (category: string) => Promise<Post<TSchema>[]>;
+  getPostsByCategorySync: (category: string) => Post<TSchema>[];
   getPostsByTag: (tag: string) => Promise<Post<TSchema>[]>;
+  getPostsByTagSync: (tag: string) => Post<TSchema>[];
   getFeaturedPosts: () => Promise<Post<TSchema>[]>;
+  getFeaturedPostsSync: () => Post<TSchema>[];
   search: (query: string) => Promise<Post<TSchema>[]>;
+  searchSync: (query: string) => Post<TSchema>[];
   getAdjacentPosts: (slug: string) => Promise<AdjacentPosts<TSchema>>;
+  getAdjacentPostsSync: (slug: string) => AdjacentPosts<TSchema>;
   getRelatedPosts: (slug: string) => Promise<Post<TSchema>[]>;
+  getRelatedPostsSync: (slug: string) => Post<TSchema>[];
   getCategories: () => Promise<string[]>;
+  getCategoriesSync: () => string[];
   getTags: () => Promise<string[]>;
+  getTagsSync: () => string[];
   generateRss: (options: RssOptions) => Promise<string>;
+  generateRssSync: (options: RssOptions) => string;
   generateSitemap: (options?: SitemapOptions) => Promise<string>;
+  generateSitemapSync: (options?: SitemapOptions) => string;
   generateLlmsTxt: (options?: LlmsTxtOptions) => Promise<string>;
+  generateLlmsTxtSync: (options?: LlmsTxtOptions) => string;
   generateSearchIndex: (options?: SearchIndexOptions) => Promise<SearchIndexEntry[]>;
+  generateSearchIndexSync: (options?: SearchIndexOptions) => SearchIndexEntry[];
 };

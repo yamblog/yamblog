@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'bun:test';
 import { join } from 'path';
 import { createBlog } from '../src/blog';
+import { PostNotFoundError } from '../src/errors';
 
 const contentDir = join(import.meta.dir, 'fixtures');
 
@@ -114,6 +115,18 @@ describe('createBlog', () => {
     expect(await blog.findPostBySlug('nonexistent')).toBeNull();
   });
 
+  it('getPostBySlug rejects with a catchable PostNotFoundError', async () => {
+    try {
+      await blog.getPostBySlug('nonexistent');
+      expect.unreachable('should have thrown');
+    } catch (err) {
+      expect(err).toBeInstanceOf(PostNotFoundError);
+      expect((err as PostNotFoundError).slug).toBe('nonexistent');
+      // Message unchanged for consumers that still string-match
+      expect((err as Error).message).toBe('Post not found: nonexistent');
+    }
+  });
+
   it('exposes the normalized basePath, defaulting to /blog', () => {
     expect(blog.basePath).toBe('/blog');
     expect(createBlog({ contentDir, basePath: 'posts/' }).basePath).toBe('/posts');
@@ -151,6 +164,57 @@ describe('createBlog', () => {
     expect(await b.generateSitemap({ includeDrafts: true })).toContain('draft-post');
     const index = await b.generateSearchIndex({ includeDrafts: true });
     expect(index.some(e => e.slug === 'draft-post')).toBe(true);
+  });
+});
+
+describe('createBlog sync API', () => {
+  const blog = createBlog({ contentDir, siteUrl: 'https://example.com' });
+
+  it('getPostsSync returns published posts with zero awaits', () => {
+    const posts = blog.getPostsSync();
+    expect(posts.length).toBe(2);
+    expect(posts.every(p => !p.draft)).toBe(true);
+  });
+
+  it('sync and async variants return the same cached array', async () => {
+    expect(await blog.getPosts()).toBe(blog.getPostsSync());
+  });
+
+  it('getPostBySlugSync returns the post or throws PostNotFoundError', () => {
+    expect(blog.getPostBySlugSync('hello-world').title).toBe('Hello World');
+    expect(() => blog.getPostBySlugSync('nonexistent')).toThrow(PostNotFoundError);
+  });
+
+  it('findPostBySlugSync returns the post or null', () => {
+    expect(blog.findPostBySlugSync('hello-world')?.title).toBe('Hello World');
+    expect(blog.findPostBySlugSync('nonexistent')).toBeNull();
+  });
+
+  it('query variants filter synchronously', () => {
+    expect(blog.getPostsByCategorySync('TypeScript').length).toBe(1);
+    expect(blog.getPostsByTagSync('intro').length).toBe(1);
+    expect(blog.getFeaturedPostsSync().every(p => p.featured)).toBe(true);
+    expect(blog.searchSync('TypeScript').length).toBe(1);
+    expect(blog.getCategoriesSync()).toContain('TypeScript');
+    expect(blog.getTagsSync()).toContain('intro');
+  });
+
+  it('getAdjacentPostsSync and getRelatedPostsSync work synchronously', () => {
+    const { prev, next } = blog.getAdjacentPostsSync('typescript-tips');
+    expect(prev).toBeNull();
+    expect(next?.slug).toBe('hello-world');
+    expect(Array.isArray(blog.getRelatedPostsSync('hello-world'))).toBe(true);
+  });
+
+  it('generators produce output synchronously', () => {
+    expect(blog.generateRssSync({ title: 'T', description: 'D' })).toContain('<rss');
+    expect(blog.generateSitemapSync()).toContain('<urlset');
+    expect(blog.generateLlmsTxtSync({ filter: () => true })).toContain('Hello World');
+    expect(blog.generateSearchIndexSync().length).toBe(2);
+  });
+
+  it('validateContentSync parses all posts including drafts', () => {
+    expect(blog.validateContentSync().length).toBe(3);
   });
 });
 

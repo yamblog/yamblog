@@ -19,7 +19,7 @@
   "scripts": {
     "build": "rm -rf ./dist && tsc -p tsconfig.json",
     "test": "bun test",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && tsc -p tsconfig.typetest.json",
     "lint": "eslint src/"
   },
   "dependencies": {
