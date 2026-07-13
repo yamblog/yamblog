@@ -87,35 +87,48 @@ export const blog = createBlog({
 
 ```typescript
 const posts    = await blog.getPosts();           // all published posts
-const post     = await blog.getPostBySlug('hello-world');  // throws if missing
+const post     = await blog.getPostBySlug('hello-world');  // throws PostNotFoundError if missing
 const maybe    = await blog.findPostBySlug('hello-world'); // null if missing
 const featured = await blog.getFeaturedPosts();
 const tags     = await blog.getTags();
 const results  = await blog.search('hello');
 ```
 
-## Extend the schema
+Every method also has a synchronous twin (`getPostsSync()`,
+`generateRssSync(...)`, …) for non-async contexts — Pages Router
+`getStaticProps`, module-scope constants, or standalone build scripts.
 
-Use Zod to add custom frontmatter fields:
+Missing posts are catchable without string-matching:
 
 ```typescript
-import { createBlog } from '@yamblog/core';
+import { PostNotFoundError } from '@yamblog/core';
+
+try {
+  await blog.getPostBySlug(slug);
+} catch (err) {
+  if (err instanceof PostNotFoundError) notFound(); // err.slug available
+  else throw err;
+}
+```
+
+## Extend the schema
+
+Use Zod to add custom frontmatter fields — the schema's inferred type flows
+to every method that returns posts, so custom fields are typed with no casts:
+
+```typescript
+import { createBlog, defaultSchema } from '@yamblog/core';
 import { z } from 'zod';
 
 const blog = createBlog({
   contentDir: './content/posts',
-  schema: z.object({
-    title:      z.string(),
-    date:       z.coerce.date(),
-    author:     z.string().default('Anonymous'),
-    tags:       z.array(z.string()).default([]),
-    excerpt:    z.string().optional(),
-    draft:      z.boolean().default(false),
-    coverImage: z.string().optional(),
-    featured:   z.boolean().default(false),
-    category:   z.string().optional(),
+  schema: defaultSchema.extend({
+    videoUrl: z.string().url().optional(),
   }),
 });
+
+const post = await blog.getPostBySlug('hello-world');
+post.videoUrl; // string | undefined — typed automatically
 ```
 
 ## Next steps
