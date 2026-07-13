@@ -71,7 +71,9 @@ export function getWorkspaceMaps(workspaces) {
 
   for (const workspace of workspaces) {
     for (const dependency of workspace.internalDependencies) {
-      dependents.get(dependency).add(workspace.name);
+      // When called with a subset (e.g. sortWorkspacesTopologically over the
+      // affected workspaces), a dependency may fall outside the subset.
+      dependents.get(dependency)?.add(workspace.name);
     }
   }
 
