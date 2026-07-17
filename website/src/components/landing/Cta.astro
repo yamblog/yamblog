@@ -1,6 +1,6 @@
 ---
 const HUMAN_INSTALL = 'npm install @yamblog/core @yamblog/next';
-const AGENT_PROMPT = 'Inspect this project. If it uses a supported Yamblog platform, integrate Yamblog using the official docs, create a sample hello-world post, verify the setup, and stop if the platform is unsupported.';
+const AGENT_PROMPT = 'Inspect this project. If it uses a supported Yamblog platform (Next.js, Astro, or React/Vite), integrate Yamblog using the official docs, create a sample hello-world post, verify the setup, and stop with a clear explanation if the platform is unsupported.';
 const checklist = [
   'Humans get framework recipes',
   'Agents get a self-healing prompt',

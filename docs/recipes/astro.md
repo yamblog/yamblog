@@ -399,6 +399,10 @@ object is straightforward to write once in your own layout. Use `buildPostUrl`
 
 ```astro
 ---
+import { buildPostUrl } from '@yamblog/core';
+import { blog } from '../../lib/blog';
+
+// `post` comes from your page — getStaticPaths props or blog.getPostBySlug()
 const jsonLd = {
   '@context': 'https://schema.org',
   '@type':    'BlogPosting',
