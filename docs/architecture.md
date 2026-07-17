@@ -26,9 +26,9 @@ content/posts/*.md
         ▼
   @yamblog/core
   ├── gray-matter   — frontmatter parsing
-  ├── Zod           — schema validation
-  ├── Promise cache — one I/O pass per Blog instance
-  └── Blog API      — getPosts, search, RSS, sitemap …
+  ├── Zod           — schema validation (peer dependency)
+  ├── Posts cache   — one I/O pass per Blog instance
+  └── Blog API      — getPosts, search, RSS, sitemap, llms.txt …
         │
         ├──▶ @yamblog/next   (metadata, OG, JSON-LD, RSC)
         ├──▶ @yamblog/astro  (Content Layer loader, .astro components)
@@ -40,17 +40,30 @@ content/posts/*.md
 The single source of truth. Responsibilities:
 
 - **Parser** (`parser.ts`) — reads `.md` / `.mdx` files, runs gray-matter, validates with Zod
-- **Query engine** (`query.ts`) — `getPosts`, `getPostBySlug`, `getPostsByTag`, `getPostsByCategory`, `getFeaturedPosts`, `getAdjacentPosts`, `getRelatedPosts`
-- **Search** (`search.ts`) — relevance-ranked full-text search over title, excerpt, tags, body
+- **Query engine** (`query.ts`) — `getPosts`, `getPostBySlug`, `findPostBySlug`, `getPostsByTag`, `getPostsByCategory`, `getFeaturedPosts`, `getAdjacentPosts`, `getRelatedPosts`
+- **Typed errors** (`errors.ts`) — `getPostBySlug` / `getAdjacentPosts` throw `PostNotFoundError` (carries a `slug` field); `findPostBySlug` returns `null` instead of throwing
+- **Search** (`search.ts`) — relevance-ranked full-text search over title, excerpt, tags, body; `searchPosts` is also exported from the fs-free `@yamblog/core/search` subpath, safe for browser bundles
 - **Related posts** (`related.ts`) — tag overlap / category overlap / combined strategy
-- **RSS** (`rss.ts`) — returns a valid RSS 2.0 XML string
+- **RSS** (`rss.ts`) — returns a valid RSS 2.0 XML string (atom self-link, `lastBuildDate`, configurable `language` / `feedUrl`)
 - **Sitemap** (`sitemap.ts`) — returns a sitemap XML string (`<?xml ...><urlset ...>`)
+- **llms.txt** (`llms.ts`) — generates the blog section of an [llms.txt](https://llmstxt.org) file
+- **Validation** (`validate.ts`) — `validateContent` / `validateContentSync` for CI and build-step checks
+- **URL building** (`utils.ts`) — one URL rule for RSS, sitemap, and llms.txt: `buildPostUrl(siteUrl, basePath, slug)`, with `basePath` configurable (default `/blog`)
 - **Stable IDs** — every post gets `id = "blog-{slug}"` for wiring into external services
 - **`defineBlog(contentDir?, siteUrl?)`** — zero-config factory; auto-detects `siteUrl` from env, resolves `contentDir` relative to `cwd`, stores `siteUrl` on the instance for RSS/sitemap
 
-Caching: the first call to any method triggers `loadPosts()`, which is stored as a
-resolved `Promise<Post[]>` on the `Blog` instance. Subsequent calls reuse the same
-array reference — no re-reads.
+**Sync core, async wrappers:** the engine's work — reading local markdown files,
+parsing, validating — is inherently synchronous, so the sync methods
+(`getPostsSync`, `generateRssSync`, …) are the implementation and every async
+method is a thin wrapper over its sync twin. Both share one posts cache.
+
+Caching: the first call to any query or generator method loads and parses all
+posts once; subsequent calls reuse the same array reference — no re-reads. In
+development (`NODE_ENV=development`) the cache is invalidated when content files
+change (filename/mtime fingerprint), so edits show up without restarting the dev
+server. The exception is `validateContent` / `validateContentSync`, which
+deliberately bypass the cache and re-read from disk on every call — a validator
+should check what is currently on disk, not what was cached.
 
 ## `@yamblog/next`
 
@@ -127,6 +140,10 @@ docs/
     nextjs.md
     astro.md
     react.md
+    custom-fields.md
   extensibility.md
   ai-agent-authoring.md
+  prompt-for-llms.md
+  llms-txt.md
+website/      yamblog.dev — landing page + docs site (serves the docs/ folder)
 ```

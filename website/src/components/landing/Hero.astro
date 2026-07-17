@@ -1,4 +1,6 @@
 ---
+import { versions } from '../../lib/versions';
+
 // Token helpers — renders highlighted code spans server-side
 const k = (t: string) => `<span class="tk-k">${t}</span>`;
 const s = (t: string) => `<span class="tk-s">${t}</span>`;
@@ -32,7 +34,7 @@ const tab2: Line[] = [
   line(`post.id; ${c('// → "blog-hello-world"')}`),
   empty(),
   line(`${c('// Ship-ready generation — siteUrl propagates from defineBlog.')}`),
-  line(`${k('const')} rss     = ${k('await')} blog.${f('generateRss')}();`),
+  line(`${k('const')} rss     = ${k('await')} blog.${f('generateRss')}({ title: ${s("'My Blog'")}, description: ${s("'…'")} });`),
   line(`${k('const')} sitemap = ${k('await')} blog.${f('generateSitemap')}();`),
 ];
 
@@ -65,8 +67,8 @@ const INSTALL = 'npm install @yamblog/core @yamblog/next';
     <!-- Left: copy + CTAs -->
     <div>
       <div class="eyebrow">
-        <span class="eyebrow-tag">v0.1</span>
-        Yet Another Markdown Blog — now public
+        <span class="eyebrow-tag">v{versions.core}</span>
+        Yet Another Markdown Blog
       </div>
 
       <h1>

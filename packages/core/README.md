@@ -189,6 +189,20 @@ p.readingTime;  // number — engine fields still present
 Every method above also exists as a `…Sync` variant with the same signature
 minus the `Promise` (e.g. `getPostsSync()`, `generateRssSync(options)`).
 
+The package root also exports standalone helpers: `searchPosts`, `defaultSlugify`,
+`buildPostUrl`, `normalizeBasePath`, `normalizeSiteUrl`, and `DEFAULT_BASE_PATH`.
+
+## Browser-safe search
+
+`searchPosts` is additionally available from the `@yamblog/core/search` subpath,
+which is free of `fs`/`path` imports — safe to use in client bundles:
+
+```ts
+import { searchPosts } from '@yamblog/core/search';
+
+const results = searchPosts(posts, 'typescript');
+```
+
 ## Stable blog ID
 
 Every post exposes `post.id = "blog-{slug}"` — a stable foreign key you can wire into comments, analytics, or related-content services without worrying about it changing.

@@ -27,11 +27,12 @@ export const blog = defineBlog('src/content/posts', import.meta.env.SITE);
 ```
 
 That's it. `defineBlog(contentDir, siteUrl)` resolves the content dir relative to `cwd`,
-and the site URL flows through to `blog.generateRss()` and `blog.generateSitemap()`
+and the site URL flows through to `generateRss` and `generateSitemap`
 automatically — no need to repeat it at every call site.
 
 **Zero-config:** `defineBlog()` with no arguments defaults to `src/content/posts` and
-auto-detects the site URL from `SITE`, `PUBLIC_SITE_URL`, `NEXT_PUBLIC_BASE_URL`, or `VERCEL_URL`.
+auto-detects the site URL from `SITE`, `PUBLIC_SITE_URL`, `NEXT_PUBLIC_SITE_URL`,
+`NEXT_PUBLIC_BASE_URL`, or `VERCEL_URL` (checked in that order).
 
 **Full config:** pass an options object for schema, sorting, related posts, etc.:
 
@@ -125,7 +126,8 @@ const posts = await blog.getPosts();
 ---
 // src/pages/blog/[slug].astro
 import BlogPostPage from '@yamblog/astro/components/BlogPostPage.astro';
-import { blog, SITE_URL } from '../../lib/blog';
+import { buildPostUrl } from '@yamblog/core';
+import { blog } from '../../lib/blog';
 
 export async function getStaticPaths() {
   const posts = await blog.getPosts();
@@ -144,7 +146,7 @@ const jsonLd = {
   datePublished:   post.date.toISOString(),
   author:          { '@type': 'Person', name: post.author },
   keywords:        post.tags.join(', '),
-  url:             `${SITE_URL}/blog/${post.slug}`,
+  url:             buildPostUrl(blog.siteUrl, blog.basePath, post.slug),
 };
 ---
 
@@ -158,7 +160,8 @@ Use `toHtml` from `@yamblog/remark` for full pipeline control — compose any
 
 ```astro
 ---
-import { blog, SITE_URL } from '../../lib/blog';
+import { buildPostUrl } from '@yamblog/core';
+import { blog } from '../../lib/blog';
 import { toHtml, remarkToc, remarkEmbed } from '@yamblog/remark';
 
 export async function getStaticPaths() {
@@ -182,7 +185,7 @@ const jsonLd = {
   description:   post.excerpt,
   datePublished: post.date.toISOString(),
   author:        { '@type': 'Person', name: post.author },
-  url:           `${SITE_URL}/blog/${post.slug}`,
+  url:           buildPostUrl(blog.siteUrl, blog.basePath, post.slug),
 };
 ---
 
@@ -345,7 +348,8 @@ export const GET: APIRoute = async () => {
   const xml = await blog.generateRss({
     title:       'My Blog',
     description: 'Latest posts from my blog',
-    author:      'Your Name',
+    // Per the RSS 2.0 spec this should be an email — validators flag bare names
+    author:      'you@example.com (Your Name)',
   });
 
   return new Response(xml, {
@@ -388,11 +392,17 @@ export const GET: APIRoute = async () => {
 
 ## 9. JSON-LD (structured data)
 
-There is no helper for this — the mapping from a `Post` to a JSON-LD object is
-straightforward to write once in your own layout:
+There is no dedicated helper for this — the mapping from a `Post` to a JSON-LD
+object is straightforward to write once in your own layout. Use `buildPostUrl`
+(from `@yamblog/core`) for the URL so it always matches your configured
+`basePath` and the links in your RSS feed and sitemap:
 
 ```astro
 ---
+import { buildPostUrl } from '@yamblog/core';
+import { blog } from '../../lib/blog';
+
+// `post` comes from your page — getStaticPaths props or blog.getPostBySlug()
 const jsonLd = {
   '@context': 'https://schema.org',
   '@type':    'BlogPosting',
@@ -402,7 +412,7 @@ const jsonLd = {
   dateModified:    post.date.toISOString(),
   author:          { '@type': 'Person', name: post.author },
   keywords:        post.tags.join(', '),
-  url:             `${SITE_URL}/blog/${post.slug}`,
+  url:             buildPostUrl(blog.siteUrl, blog.basePath, post.slug),
   ...(post.coverImage && { image: post.coverImage }),
 };
 ---
@@ -438,6 +448,41 @@ const html = await toHtml(post.content, {
 
 If you only need raw markdown (e.g., to pass to a different renderer), `post.content` is
 the untransformed string — `toHtml` is opt-in.
+
+---
+
+## 11. Astro Content Layer (optional)
+
+Everything above queries the shared `blog` instance directly. If you prefer
+Astro's native content collections (`getCollection`, `getEntry`, typed
+`astro:content` APIs), `@yamblog/astro` ships a Content Layer loader:
+
+```ts
+// src/content.config.ts
+import { defineCollection } from 'astro:content';
+import { yamblogLoader } from '@yamblog/astro';
+
+const blog = defineCollection({
+  loader: yamblogLoader({ base: './src/content/posts' }),
+});
+
+export const collections = { blog };
+```
+
+```astro
+---
+import { getCollection } from 'astro:content';
+
+const posts = await getCollection('blog');
+---
+```
+
+The loader derives the collection schema from core's `defaultSchema` (or a
+custom `schema` option you pass) and always adds the system fields (`id`,
+`slug`, `content`, `readingTime`), so custom frontmatter fields stay typed in
+Astro too. Both approaches read the same markdown files — pick whichever API
+you prefer, or mix them (e.g. collections for pages, the `blog` instance for
+RSS/sitemap endpoints).
 
 ---
 

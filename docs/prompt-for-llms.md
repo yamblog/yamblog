@@ -28,91 +28,43 @@ If the project is not based on one of those platforms, the agent should stop and
 ## Copy-paste prompt
 
 ```text
-You are integrating YAMBlog into an existing project. Work like a careful senior engineer: inspect first, decide the platform, then implement. Be self-healing: if your first attempt fails, diagnose from the codebase, adjust, and continue until the integration is working or you can prove the platform is unsupported.
+You are integrating YAMBlog (https://github.com/yamblog/yamblog) into an existing project. Inspect first, then implement. If an attempt fails, diagnose from the codebase and the installed packages, fix, and continue. Never invent API names, and never claim success without running the verification step.
 
-Goals:
-1. Detect what platform/framework this project uses.
-2. Confirm whether that platform is supported by YAMBlog.
-3. Integrate YAMBlog using the correct adapter or fallback path.
-4. Create a sample blog post file.
-5. Verify the integration by checking imports, routes/pages, and expected content paths.
-6. If something fails, repair the approach instead of stopping at the first error.
+1. Detect the platform. Read package.json, the lockfile, and config files before editing anything, then state what you found and why:
+   - Next.js (`next` dependency, app/ or pages/)  → @yamblog/core + @yamblog/next
+   - Astro (`astro` dependency, astro.config.*)   → @yamblog/core + @yamblog/astro
+   - React + Vite (`react` + `vite`)              → @yamblog/core (+ @yamblog/react for UI)
+   Anything else is unsupported: stop, explain the mismatch, and propose the closest safe fallback using @yamblog/core only — do not force a broken integration.
 
-Platform detection rules:
-- Inspect `package.json`, lockfiles, config files, and app structure before making changes.
-- Look for signals such as:
-  - Next.js: `next`, `app/`, `pages/`, `next.config.*`
-  - Astro: `astro`, `astro.config.*`, `src/pages/`, `src/content.config.*`
-  - React/Vite: `react`, `vite`, `src/main.*`, SPA structure
-- State clearly which platform you detected and why.
+2. Install the packages for the detected platform, using the project's own package manager (check which lockfile exists).
 
-Supported platform rules:
-- Treat these YAMBlog paths as supported:
-  - Next.js: use `@yamblog/core` + `@yamblog/next`
-  - Astro: use `@yamblog/core` + `@yamblog/astro`
-  - React/Vite: use `@yamblog/core` and, where useful, `@yamblog/react`
-- Prefer the most native integration for the detected platform.
-- If the project is not based on a supported platform, do not force an integration.
-- For unsupported platforms:
-  - explain the mismatch clearly
-  - propose the closest safe fallback using `@yamblog/core`
-  - do not invent framework-specific APIs that do not exist
+3. Create the content directory and a shared blog instance, following the project's conventions for file placement and aliases:
+   - content dir: content/posts (Next.js, React/Vite) or src/content/posts (Astro)
+   - instance (this API is real — start from it, do not improvise):
+       import { defineBlog } from '@yamblog/core';
+       export const blog = defineBlog('<content dir>');
 
-Implementation rules:
-- Reuse existing project conventions for package manager, aliases, formatting, and file layout.
-- Do not rewrite unrelated code.
-- Choose a content directory that matches the platform and project structure:
-  - Next.js: prefer `content/posts`
-  - Astro: prefer `src/content/posts`
-  - React/Vite: prefer `content/posts` or another clearly project-local content folder
-- Create the minimum files needed for a working first post flow.
-- If a YAMBlog package or API name appears not to work, inspect the local code/docs/examples and correct the integration rather than guessing.
+4. Create <content dir>/hello-world.md. Use today's real date. Do NOT add a slug field — slugs are derived from the filename:
+   ---
+   title: "Hello World"
+   date: "<YYYY-MM-DD>"
+   author: "Your Name"
+   tags: ["intro"]
+   excerpt: "My first post powered by Yamblog."
+   draft: false
+   ---
 
-Self-healing behavior:
-- Before changing code, inspect the project structure and summarize the plan.
-- After each significant edit, sanity-check the result against the detected framework conventions.
-- If an import fails, search the installed codebase or docs/examples and replace it with the correct export.
-- If a route or file location is wrong, move it to the framework-correct location.
-- If a content directory does not match the blog config, reconcile them.
-- If a package is missing, add only the package(s) required for the detected platform.
-- If the framework is unsupported, stop implementation and produce a precise fallback plan instead of broken code.
-- Never hallucinate success. Verify.
+   Welcome to my blog, powered by **Yamblog**.
 
-Required sample blog post:
-Create a sample markdown file named `hello-world.md` in the chosen posts directory with this content:
+5. Wire the minimal routes (a listing page calling blog.getPosts() and a post page calling blog.getPostBySlug(slug)) using the adapter's documented exports. If an import fails, read the installed package or https://yamblog.dev/getting-started/ and correct it — do not guess names.
 
----
-title: "Hello World"
-date: "2026-05-01"
-author: "Your Name"
-tags: ["general", "intro"]
-excerpt: "My first post powered by Yamblog."
-featured: true
-draft: false
----
+6. Verify before declaring success:
+   - `await blog.validateContent()` passes — it throws on invalid frontmatter, a missing content directory, or duplicate slugs
+   - `await blog.getPostBySlug('hello-world')` returns the sample post
+   - the project builds (or the blog route renders in the dev server)
+   If a check fails, fix the cause — wrong import, wrong route location, content dir not matching the config — and re-verify.
 
-# Hello World
-
-Welcome to my blog, powered by **Yamblog**.
-
-This is the first post in this project.
-
-## Why this exists
-
-This sample post verifies that:
-- frontmatter is parsed
-- the content directory is wired correctly
-- the project can render or load a Yamblog post
-
-Final output format:
-1. Detected platform
-2. Supported or unsupported decision
-3. Files created or changed
-4. Exact integration summary
-5. Verification performed
-6. Any remaining gaps or follow-up steps
-
-Start by inspecting the project and explicitly naming the detected platform before editing anything.
+Finish with a short report: detected platform (or unsupported + fallback plan), files created or changed, verification performed, and any remaining gaps.
 ```
 
 ## Homepage-sized version
@@ -120,7 +72,7 @@ Start by inspecting the project and explicitly naming the detected platform befo
 Use this when you only need a short prompt on a landing page:
 
 ```text
-Inspect this codebase. If it uses a supported Yamblog platform, verify the official Yamblog docs, install the correct packages, integrate Yamblog, create a sample hello-world post, verify the setup, and stop with a clear explanation if the platform is unsupported.
+Inspect this project. If it uses a supported Yamblog platform (Next.js, Astro, or React/Vite), integrate Yamblog using the official docs, create a sample hello-world post, verify the setup, and stop with a clear explanation if the platform is unsupported.
 ```
 
 ## Related guides
