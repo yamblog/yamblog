@@ -126,6 +126,7 @@ const posts = await blog.getPosts();
 ---
 // src/pages/blog/[slug].astro
 import BlogPostPage from '@yamblog/astro/components/BlogPostPage.astro';
+import { buildPostUrl } from '@yamblog/core';
 import { blog } from '../../lib/blog';
 
 export async function getStaticPaths() {
@@ -145,7 +146,7 @@ const jsonLd = {
   datePublished:   post.date.toISOString(),
   author:          { '@type': 'Person', name: post.author },
   keywords:        post.tags.join(', '),
-  url:             `${blog.siteUrl}/blog/${post.slug}`,
+  url:             buildPostUrl(blog.siteUrl, blog.basePath, post.slug),
 };
 ---
 
@@ -159,6 +160,7 @@ Use `toHtml` from `@yamblog/remark` for full pipeline control — compose any
 
 ```astro
 ---
+import { buildPostUrl } from '@yamblog/core';
 import { blog } from '../../lib/blog';
 import { toHtml, remarkToc, remarkEmbed } from '@yamblog/remark';
 
@@ -183,7 +185,7 @@ const jsonLd = {
   description:   post.excerpt,
   datePublished: post.date.toISOString(),
   author:        { '@type': 'Person', name: post.author },
-  url:           `${blog.siteUrl}/blog/${post.slug}`,
+  url:           buildPostUrl(blog.siteUrl, blog.basePath, post.slug),
 };
 ---
 
@@ -390,8 +392,10 @@ export const GET: APIRoute = async () => {
 
 ## 9. JSON-LD (structured data)
 
-There is no helper for this — the mapping from a `Post` to a JSON-LD object is
-straightforward to write once in your own layout:
+There is no dedicated helper for this — the mapping from a `Post` to a JSON-LD
+object is straightforward to write once in your own layout. Use `buildPostUrl`
+(from `@yamblog/core`) for the URL so it always matches your configured
+`basePath` and the links in your RSS feed and sitemap:
 
 ```astro
 ---
@@ -404,7 +408,7 @@ const jsonLd = {
   dateModified:    post.date.toISOString(),
   author:          { '@type': 'Person', name: post.author },
   keywords:        post.tags.join(', '),
-  url:             `${blog.siteUrl}/blog/${post.slug}`,
+  url:             buildPostUrl(blog.siteUrl, blog.basePath, post.slug),
   ...(post.coverImage && { image: post.coverImage }),
 };
 ---

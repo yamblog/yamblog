@@ -57,10 +57,13 @@ parsing, validating — is inherently synchronous, so the sync methods
 (`getPostsSync`, `generateRssSync`, …) are the implementation and every async
 method is a thin wrapper over its sync twin. Both share one posts cache.
 
-Caching: the first call to any method loads and parses all posts once; subsequent
-calls reuse the same array reference — no re-reads. In development
-(`NODE_ENV=development`) the cache is invalidated when content files change
-(filename/mtime fingerprint), so edits show up without restarting the dev server.
+Caching: the first call to any query or generator method loads and parses all
+posts once; subsequent calls reuse the same array reference — no re-reads. In
+development (`NODE_ENV=development`) the cache is invalidated when content files
+change (filename/mtime fingerprint), so edits show up without restarting the dev
+server. The exception is `validateContent` / `validateContentSync`, which
+deliberately bypass the cache and re-read from disk on every call — a validator
+should check what is currently on disk, not what was cached.
 
 ## `@yamblog/next`
 

@@ -73,9 +73,16 @@ Install and configure Yamblog:
 
 2. Create the content directory
    mkdir -p content/posts
-   Create content/posts/hello-world.md with frontmatter:
-     title, date, author, tags, excerpt, draft: false
-   (no slug field — it is derived from the filename)
+   Create content/posts/hello-world.md starting with this frontmatter block
+   (no slug field — it is derived from the filename):
+     ---
+     title: "Hello World"
+     date: "2026-05-01"
+     author: "Your Name"
+     tags: ["intro"]
+     excerpt: "My first post."
+     draft: false
+     ---
 
 3. Create the blog instance (lib/blog.ts)
    import { defineBlog } from "@yamblog/core";
