@@ -38,12 +38,13 @@ import { blog } from '@/lib/blog';
 export default async function BlogPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string }>;
+  searchParams: Promise<{ q?: string | string[] }>;
 }) {
   const { q } = await searchParams;
-  const posts = q ? await blog.search(q) : await blog.getPosts();
+  const query = Array.isArray(q) ? q[0] : q; // repeated ?q= arrives as an array
+  const posts = query ? await blog.search(query) : await blog.getPosts();
 
-  return <BlogListPage posts={posts} query={q} />;
+  return <BlogListPage posts={posts} query={query} />;
 }
 ```
 
