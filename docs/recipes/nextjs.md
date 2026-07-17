@@ -1,11 +1,13 @@
 ---
 title: Next.js Guide
-description: Full integration of @yamblog/core + @yamblog/next in a Next.js 14+ App Router project.
+description: Full integration of @yamblog/core + @yamblog/next in a Next.js 15+ App Router project.
 ---
 
 # Recipe — Next.js App Router
 
-Full integration of `@yamblog/core` + `@yamblog/next` in a Next.js 14+ App Router project.
+Full integration of `@yamblog/core` + `@yamblog/next` in a Next.js 15+ App Router
+project. Examples use the async `params` / `searchParams` introduced in Next.js 15 —
+on Next.js 14, read them as plain objects instead of awaiting.
 
 ## Install
 
@@ -36,13 +38,12 @@ import { blog } from '@/lib/blog';
 export default async function BlogPage({
   searchParams,
 }: {
-  searchParams: { q?: string };
+  searchParams: Promise<{ q?: string }>;
 }) {
-  const posts = searchParams.q
-    ? await blog.search(searchParams.q)
-    : await blog.getPosts();
+  const { q } = await searchParams;
+  const posts = q ? await blog.search(q) : await blog.getPosts();
 
-  return <BlogListPage posts={posts} query={searchParams.q} />;
+  return <BlogListPage posts={posts} query={q} />;
 }
 ```
 
@@ -64,18 +65,20 @@ export async function generateStaticParams() {
   return createStaticParams(blog);
 }
 
-export async function generateMetadata({ params }: { params: { slug: string } }) {
-  const post = await blog.findPostBySlug(params.slug);
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const post = await blog.findPostBySlug(slug);
   if (!post) return {};
   return generatePostMetadata(post, { siteUrl: blog.siteUrl, basePath: blog.basePath, siteName: 'My Blog' });
 }
 
-export default async function PostPage({ params }: { params: { slug: string } }) {
-  const post = await blog.findPostBySlug(params.slug);
+export default async function PostPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const post = await blog.findPostBySlug(slug);
   if (!post) notFound();
 
-  const adjacent = await blog.getAdjacentPosts(params.slug);
-  const related  = await blog.getRelatedPosts(params.slug);
+  const adjacent = await blog.getAdjacentPosts(slug);
+  const related  = await blog.getRelatedPosts(slug);
 
   const jsonLd = generateBlogJsonLd(post, { siteUrl: blog.siteUrl, basePath: blog.basePath });
   const breadcrumbJsonLd = generateBreadcrumbJsonLd([
@@ -143,8 +146,9 @@ export const GET = createOgImageHandler(blog, { siteName: 'My Blog' });
 // app/blog/[slug]/page.tsx
 import { toHtml, remarkToc, remarkEmbed } from '@yamblog/remark';
 
-export default async function PostPage({ params }: { params: { slug: string } }) {
-  const post = await blog.findPostBySlug(params.slug);
+export default async function PostPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const post = await blog.findPostBySlug(slug);
   if (!post) notFound();
 
   const html = await toHtml(post.content, {

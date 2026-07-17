@@ -66,17 +66,19 @@ export async function generateStaticParams() {
   return createStaticParams(blog);
 }
 
-export async function generateMetadata({ params }: { params: { slug: string } }) {
-  const post = await blog.findPostBySlug(params.slug);
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const post = await blog.findPostBySlug(slug);
   if (!post) return {};
   return generatePostMetadata(post, { siteUrl: blog.siteUrl, siteName: 'My Blog' });
 }
 
-export default async function PostPage({ params }: { params: { slug: string } }) {
-  const post = await blog.findPostBySlug(params.slug);
+export default async function PostPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const post = await blog.findPostBySlug(slug);
   if (!post) notFound();
 
-  const adjacent = await blog.getAdjacentPosts(params.slug);
+  const adjacent = await blog.getAdjacentPosts(slug);
   return <BlogPostPage post={post} prev={adjacent.prev} next={adjacent.next} />;
 }
 ```

@@ -13,7 +13,7 @@ export const GET: APIRoute = async () => {
     '',
     ...docs.map(
       (doc) =>
-        `- [${doc.data.title}](https://yamblog.dev/${doc.id}/): ${doc.data.description ?? ''}`.trimEnd(),
+        `- [${doc.data.title}](${blog.siteUrl}/${doc.id}/): ${doc.data.description ?? ''}`.trimEnd(),
     ),
   ].join('\n');
 

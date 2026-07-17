@@ -9,7 +9,7 @@ featured: true
 draft: false
 ---
 
-Every week someone ships a beautiful landing page for a side project, posts it once, gets a spike of traffic, and then watches the graph flatline. The landing page did its job — it just only had one job.
+Every week someone ships a beautiful landing page for a side project, posts it once, gets a spike of traffic, and then watches the graph flatline. The landing page did its job — it only had one job.
 
 A blog is the part of your site that keeps working after launch day. Here's the unsentimental case for it.
 
