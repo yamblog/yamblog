@@ -23,7 +23,9 @@ By default, only posts with `featured: true` in their frontmatter are included.
 |---|---|---|---|
 | `sectionTitle` | `string` | `'Blog'` | The `##` heading for the section |
 | `siteUrl` | `string` | from config | Override the base URL |
+| `basePath` | `string` | from config (`'/blog'`) | URL prefix for post links |
 | `filter` | `(post: Post) => boolean` | `p => p.featured` | Which posts to include |
+| `includeDrafts` | `boolean` | `false` | Include `draft: true` posts. Off even when the blog is configured with `includeDrafts: true`, so previews can't publish drafts. Applied before `filter` |
 
 ### Filtering examples
 

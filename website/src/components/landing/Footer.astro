@@ -1,4 +1,6 @@
 ---
+import { versions } from '../../lib/versions';
+
 const year = new Date().getFullYear();
 ---
 
@@ -47,8 +49,7 @@ const year = new Date().getFullYear();
     <div class="footer-bottom">
       <div>© {year} Yamblog · MIT</div>
       <div class="meta">
-        <span>v0.1.0</span>
-        <span>last shipped {new Date().toISOString().slice(0, 10)}</span>
+        <span>@yamblog/core v{versions.core}</span>
       </div>
     </div>
   </div>

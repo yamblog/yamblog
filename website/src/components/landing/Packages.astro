@@ -1,4 +1,6 @@
 ---
+import { versions } from '../../lib/versions';
+
 const packages = [
   {
     scope: '@yamblog/',
@@ -51,14 +53,14 @@ const packages = [
         <div>Package</div>
         <div>Description</div>
         <div>Public exports</div>
-        <div style="justify-self: end">Status</div>
+        <div style="justify-self: end">Latest</div>
       </div>
       {packages.map(pkg => (
         <div class="pkg-row">
           <div class="pkg-name"><span class="scope">{pkg.scope}</span>{pkg.name}</div>
           <div class="pkg-desc">{pkg.desc}</div>
           <div class="pkg-exports">{pkg.exports}</div>
-          <div class="pkg-status stable"><span class="pulse"></span>Stable</div>
+          <div class="pkg-status stable"><span class="pulse"></span>v{versions[pkg.name as keyof typeof versions]}</div>
         </div>
       ))}
     </div>

@@ -22,7 +22,8 @@ import { defineBlog } from '@yamblog/core';
 export const blog = defineBlog('content/posts');
 ```
 
-`defineBlog` auto-detects `siteUrl` from `NEXT_PUBLIC_BASE_URL` (or `VERCEL_URL`, `SITE`, `PUBLIC_SITE_URL`).
+`defineBlog` auto-detects `siteUrl` from environment variables, checked in this
+order: `SITE`, `PUBLIC_SITE_URL`, `NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_BASE_URL`, `VERCEL_URL`.
 `blog.siteUrl` is then available everywhere — no separate env var wrangling across files.
 
 ## 2. Blog listing page

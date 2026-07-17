@@ -74,12 +74,14 @@ Install and configure Yamblog:
 2. Create the content directory
    mkdir -p content/posts
    Create content/posts/hello-world.md with frontmatter:
-     title, slug, date, author, tags, excerpt, draft: false
+     title, date, author, tags, excerpt, draft: false
+   (no slug field — it is derived from the filename)
 
 3. Create the blog instance (lib/blog.ts)
    import { defineBlog } from "@yamblog/core";
    export const blog = defineBlog("content/posts");
-   // siteUrl auto-detected from NEXT_PUBLIC_BASE_URL / SITE / VERCEL_URL
+   // siteUrl auto-detected from SITE / PUBLIC_SITE_URL / NEXT_PUBLIC_SITE_URL /
+   // NEXT_PUBLIC_BASE_URL / VERCEL_URL
 
 4. Wire routes (Next.js App Router example)
    app/blog/page.tsx          → blog.getPosts()
@@ -130,5 +132,5 @@ Common mistakes and how to fix them:
 |-------|-----|
 | `date` is not a valid date | Use ISO 8601 format: `"2026-01-15"` |
 | `tags` is not an array | Use YAML array: `tags: ["a", "b"]` |
-| `Post not found` | Check the slug matches the filename (minus `.md`) |
+| `PostNotFoundError` (`Post not found: {slug}`) | Check the slug matches the sanitized filename (lowercase, dashes, minus `.md`); catch with `instanceof PostNotFoundError`, or use `findPostBySlug` which returns `null` |
 | `Schema validation failed` | Check all required fields are present and typed correctly |
