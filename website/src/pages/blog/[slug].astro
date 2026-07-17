@@ -25,13 +25,31 @@ const formatDate = (date: Date) =>
     month: 'long',
     day: 'numeric',
   });
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'BlogPosting',
+  headline: post.title,
+  description: post.excerpt,
+  datePublished: post.date.toISOString(),
+  author: {
+    '@type': 'Person',
+    name: post.author,
+    ...(post.authorWebpage && { url: post.authorWebpage }),
+  },
+  keywords: post.tags.join(', '),
+  url: `${blog.siteUrl}/blog/${post.slug}/`,
+};
 ---
 
 <Landing
   title={`${post.title} — Yamblog`}
   description={post.excerpt ?? `Read ${post.title} on the Yamblog blog.`}
+  ogType="article"
 >
   <Nav />
+
+  <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
 
   <main class="blog-post">
     <div class="container">

@@ -4,6 +4,7 @@ import starlight from '@astrojs/starlight';
 import cloudflare from '@astrojs/cloudflare';
 
 export default defineConfig({
+  site: 'https://yamblog.dev',
   adapter: cloudflare({
     prerenderEnvironment: 'node',
     imageService: 'passthrough',

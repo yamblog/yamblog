@@ -2,11 +2,15 @@
 interface Props {
   title?: string;
   description?: string;
+  /** OpenGraph type — 'article' for blog posts. Default: 'website' */
+  ogType?: 'website' | 'article';
 }
 const {
   title = 'Yamblog — The markdown blog engine for the agentic era',
   description = 'File-based, type-safe, framework-agnostic blog engine for Next.js, Astro, and React.',
+  ogType = 'website',
 } = Astro.props;
+const canonical = new URL(Astro.url.pathname, Astro.site);
 ---
 
 <!doctype html>
@@ -16,6 +20,15 @@ const {
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>{title}</title>
   <meta name="description" content={description} />
+  <link rel="canonical" href={canonical} />
+  <meta property="og:title" content={title} />
+  <meta property="og:description" content={description} />
+  <meta property="og:type" content={ogType} />
+  <meta property="og:url" content={canonical} />
+  <meta property="og:site_name" content="Yamblog" />
+  <meta name="twitter:card" content="summary" />
+  <link rel="alternate" type="application/rss+xml" title="Yamblog Blog" href="/feed.xml" />
+  <link rel="sitemap" href="/sitemap.xml" />
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   <!-- Dark mode — must run sync to prevent flash of wrong theme -->
   <script is:inline>
