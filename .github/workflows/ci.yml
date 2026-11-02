@@ -21,6 +21,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
+permissions:
+  contents: read
+
 jobs:
   ci:
     runs-on: ubuntu-latest
@@ -28,15 +31,18 @@ jobs:
       contents: read
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version-file: package.json
 
       - name: Setup Node
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
           node-version: 22.12.0
 
@@ -45,15 +51,22 @@ jobs:
 
       - name: Build affected workspaces
         shell: bash
+        # Untrusted/user-supplied values go through env, never inline ${{ }}.
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_ALL: ${{ inputs.all }}
+          INPUT_SINCE: ${{ inputs.since }}
+          BASE_REF: ${{ github.base_ref }}
+          BEFORE_SHA: ${{ github.event.before }}
         run: |
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ inputs.all }}" == "true" ]]; then
+          if [[ "$EVENT_NAME" == "workflow_dispatch" && "$INPUT_ALL" == "true" ]]; then
             bun run build:changed -- --all
-          elif [[ "${{ github.event_name }}" == "workflow_dispatch" && -n "${{ inputs.since }}" ]]; then
-            bun run build:changed -- --since "${{ inputs.since }}"
-          elif [[ "${{ github.event_name }}" == "pull_request" ]]; then
-            bun run build:changed -- --since "origin/${{ github.base_ref }}"
-          elif [[ -n "${{ github.event.before }}" && "${{ github.event.before }}" != "0000000000000000000000000000000000000000" ]]; then
-            bun run build:changed -- --since "${{ github.event.before }}"
+          elif [[ "$EVENT_NAME" == "workflow_dispatch" && -n "$INPUT_SINCE" ]]; then
+            bun run build:changed -- --since "$INPUT_SINCE"
+          elif [[ "$EVENT_NAME" == "pull_request" ]]; then
+            bun run build:changed -- --since "origin/$BASE_REF"
+          elif [[ -n "$BEFORE_SHA" && "$BEFORE_SHA" != "0000000000000000000000000000000000000000" ]]; then
+            bun run build:changed -- --since "$BEFORE_SHA"
           else
             bun run build:changed -- --all
           fi

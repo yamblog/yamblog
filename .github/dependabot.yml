@@ -1,0 +1,40 @@
+version: 2
+updates:
+  # Bun workspaces: the root bun.lock covers packages/*, website and examples/*.
+  - package-ecosystem: bun
+    directory: /
+    schedule:
+      interval: weekly
+    # Wait 3 days after a release before proposing it (matches bunfig.toml's
+    # minimumReleaseAge) so malicious/broken releases can be yanked first.
+    cooldown:
+      default-days: 3
+    # Only touch a declared range when the new version falls outside it, so
+    # minor/patch updates stay lockfile-only and don't silently change the
+    # dependency ranges of our published packages.
+    versioning-strategy: increase-if-necessary
+    ignore:
+      # Our own packages are versioned by Changesets — never let Dependabot
+      # bump them.
+      - dependency-name: '@yamblog/*'
+    groups:
+      minor-and-patch:
+        update-types:
+          - minor
+          - patch
+    commit-message:
+      prefix: chore(deps)
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 3
+    groups:
+      minor-and-patch:
+        update-types:
+          - minor
+          - patch
+    commit-message:
+      prefix: ci(deps)
