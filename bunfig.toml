@@ -1,2 +1,9 @@
 [install]
 exact = true
+# Keep the hoisted node_modules layout this repo was built against (bun 1.3
+# defaults new workspace lockfiles to the isolated linker).
+linker = "hoisted"
+# Supply-chain cooldown: don't resolve package versions published less than
+# 3 days ago (value is in seconds). Gives the registry time to pull malicious
+# releases before they reach our lockfile.
+minimumReleaseAge = 259200

@@ -16,11 +16,11 @@
     "@astrojs/check": "^0.9.9"
   },
   "dependencies": {
-    "@astrojs/cloudflare": "^13.5.0",
-    "@astrojs/starlight": "^0.40.0",
+    "@astrojs/cloudflare": "^14.4.0",
+    "@astrojs/starlight": "^0.42.0",
     "@yamblog/core": "workspace:*",
     "@yamblog/remark": "workspace:*",
-    "astro": "^6.4.5",
+    "astro": "^7.4.0",
     "remark-directive": "^3.0.0"
   }
 }
