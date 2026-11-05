@@ -17,6 +17,19 @@ bun install
 
 > **Note:** if you change any `package.json`, run `bun install` and commit the updated `bun.lock`. CI installs with `--frozen-lockfile` and fails on a stale lockfile.
 
+> **Install cooldown:** `bunfig.toml` sets `minimumReleaseAge` to 3 days, so bun won't resolve package versions published in the last 72 hours. If you need a just-released version (e.g. an urgent security fix), wait or add it to `minimumReleaseAgeExcludes` in `bunfig.toml` with a comment explaining why.
+
+### Secret scanning (pre-commit hook)
+
+The repo ships a [Gitleaks](https://github.com/gitleaks/gitleaks) hook via [pre-commit](https://pre-commit.com) that blocks commits containing secrets (API keys, tokens, private keys). Install it once per clone:
+
+```bash
+pipx install pre-commit   # or: brew install pre-commit / pip install pre-commit
+pre-commit install
+```
+
+To scan everything manually: `pre-commit run gitleaks --all-files`. CI runs the same scan (plus OSV-Scanner and CodeQL) in [`security.yml`](.github/workflows/security.yml). If it flags a false positive, add a `gitleaks:allow` comment on that line.
+
 ## Repository layout
 
 | Path | What it is |
@@ -62,6 +75,10 @@ Docs-only, website-only, and example-only changes don't need a changeset.
 ## Publishing
 
 Releases are fully automated through CI — see [RELEASING.md](RELEASING.md). Never `npm publish` manually.
+
+## Security
+
+Please report vulnerabilities privately — see [SECURITY.md](SECURITY.md). Don't open a public issue.
 
 ## Questions / ideas
 

@@ -1,0 +1,29 @@
+# OSV-Scanner configuration — used by .github/workflows/security.yml.
+#
+# Every ignore needs a reason and an expiry (`ignoreUntil`) so it gets
+# re-reviewed; when it expires the scan fails again until it is re-triaged.
+
+[[IgnoredVulns]]
+# zod: memory exhaustion validating oversized constrained collections.
+# Fixed only in zod 4.6.6; there is no 3.x fix. @yamblog/core and
+# @yamblog/astro declare zod ^3 as a *peer* dependency (consumers choose the
+# version), and astro/starlight still pull zod 3. Fixing it means migrating
+# the packages to zod 4 — tracked separately.
+id = "GHSA-mrhx-c7xc-m3w5"
+ignoreUntil = 2027-02-01T00:00:00Z
+reason = "No zod 3.x fix; requires zod 4 migration of published packages (peer dep)"
+
+[[IgnoredVulns]]
+# minimatch: DoS via globparts amplification. Fixed only in minimatch 11;
+# pulled in by eslint 9 (minimatch 3) and typescript-eslint (minimatch 10).
+# Dev-only lint tooling run on our own source globs — not shipped.
+id = "GHSA-g3hv-75wg-m249"
+ignoreUntil = 2027-02-01T00:00:00Z
+reason = "Dev-only (eslint/typescript-eslint); fix requires minimatch major the linters don't support yet"
+
+[[IgnoredVulns]]
+# False positive: a malicious npm package is named `with-next`, which
+# collides with our private example workspace `examples/with-next`
+# (private: true, resolved via workspace:, never fetched from npm).
+id = "MAL-2025-39364"
+reason = "Name collision with private local workspace examples/with-next; not installed from npm"

@@ -34,14 +34,28 @@ git push origin v2.0.0
 
 Pushing the tag triggers the [release workflow](.github/workflows/release.yml), which:
 
-1. Builds and tests all packages
-2. Fails fast if any unapplied changesets remain (step 2 was skipped)
-3. Runs `changeset publish` — publishes every package whose version isn't on npm, using the `NPM_TOKEN` automation token
-4. Pushes per-package tags (`@yamblog/core@2.0.0`, …) and creates a GitHub release with generated notes
+1. **`build` job** (read-only): fails fast if any unapplied changesets remain (step 2 was skipped), then installs with `--frozen-lockfile --ignore-scripts`, builds and tests all packages, and uploads each package's `dist/` as an artifact
+2. **`publish` job** (`npm-publish` environment, the only job with `id-token: write`): installs with `--ignore-scripts`, downloads the built `dist/` folders (no build code runs in this job), and runs `changeset publish` — publishes every package whose version isn't on npm via **npm trusted publishing (OIDC)** with provenance
+3. Pushes per-package tags (`@yamblog/core@2.0.0`, …) and creates a GitHub release with generated notes
+
+## Trusted publishing (no npm token)
+
+Publishing authenticates with a short-lived OIDC token issued to the release workflow, not a stored npm token. Every `@yamblog/*` package must have a trusted publisher configured on npmjs.com (package → **Settings** → **Trusted publishing** → GitHub Actions):
+
+| Field | Value |
+| --- | --- |
+| Organization or user | `yamblog` |
+| Repository | `yamblog` |
+| Workflow filename | `release.yml` |
+| Environment | `npm-publish` |
+
+A **new** package must be published once by hand before a trusted publisher can be added to it.
+
+Releases carry [provenance attestations](https://docs.npmjs.com/generating-provenance-statements); verify with `npm audit signatures`.
 
 ## ⚠️ Do not publish locally
 
-If you have **2FA enabled** on npm, local publishing will fail with `EOTP`. The release workflow uses an npm automation token which bypasses 2FA.
+Never publish from a laptop — releases must come from the workflow so they carry provenance. If you have **2FA enabled** on npm, local publishing fails with `EOTP` anyway.
 
 ## Emergency: fixing a bad publish
 

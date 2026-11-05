@@ -20,7 +20,7 @@
   "dependencies": {
     "@yamblog/core": "^2.0.0",
     "react-markdown": "^9.0.0",
-    "@vercel/og": "^0.6.0"
+    "@vercel/og": "^1.0.3"
   },
   "peerDependencies": {
     "next": ">=14.0.0",
