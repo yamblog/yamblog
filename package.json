@@ -23,7 +23,7 @@
     "release": "changeset publish"
   },
   "devDependencies": {
-    "@changesets/cli": "2.31.0",
+    "@changesets/cli": "3.0.3",
     "@types/node": "25.6.2",
     "eslint": "^9.39.5",
     "typescript": "6.0.3",
