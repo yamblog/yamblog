@@ -28,7 +28,7 @@ pipx install pre-commit   # or: brew install pre-commit / pip install pre-commit
 pre-commit install
 ```
 
-To scan everything manually: `pre-commit run gitleaks --all-files`. CI runs the same scan (plus OSV-Scanner and CodeQL) in [`security.yml`](.github/workflows/security.yml). If it flags a false positive, add a `gitleaks:allow` comment on that line.
+The hook only scans staged changes. To scan the whole working tree manually, install Gitleaks and run `gitleaks dir --redact --verbose .`. CI scans the full git history (plus OSV-Scanner and CodeQL) in [`security.yml`](.github/workflows/security.yml). If it flags a false positive, add a `gitleaks:allow` comment on that line.
 
 ## Repository layout
 

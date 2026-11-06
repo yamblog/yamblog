@@ -49,6 +49,38 @@ function runBuild(rootDir, workspace) {
   }
 }
 
+/**
+ * Expand a set of workspaces with their transitive internal (workspace)
+ * dependencies, so upstream packages get built before the ones that import
+ * them through dist/.
+ *
+ * @param {Array<{ name: string, internalDependencies: string[] }>} allWorkspaces
+ *   Every buildable workspace, used to look up dependencies by name.
+ * @param {Array<{ name: string, internalDependencies: string[] }>} selectedWorkspaces
+ *   The affected workspaces to expand.
+ * @returns {Array<{ name: string, internalDependencies: string[] }>}
+ *   The selected workspaces plus their dependencies, unordered (sort with
+ *   sortWorkspacesTopologically before building).
+ */
+function withInternalDependencies(allWorkspaces, selectedWorkspaces) {
+  const byName = new Map(allWorkspaces.map((workspace) => [workspace.name, workspace]));
+  const result = new Map(selectedWorkspaces.map((workspace) => [workspace.name, workspace]));
+  const queue = [...selectedWorkspaces];
+
+  while (queue.length > 0) {
+    const current = queue.shift();
+    for (const dependencyName of current.internalDependencies) {
+      const dependency = byName.get(dependencyName);
+      if (dependency && !result.has(dependencyName)) {
+        result.set(dependencyName, dependency);
+        queue.push(dependency);
+      }
+    }
+  }
+
+  return [...result.values()];
+}
+
 const rootDir = resolveRootDir();
 const args = parseArgs(process.argv.slice(2));
 const workspaces = getWorkspaces(rootDir).filter((workspace) => workspace.hasBuildScript);
@@ -73,6 +105,11 @@ if (!args.all) {
     for (const workspace of selected) {
       console.log(`- ${workspace.name} (${workspace.relDir})`);
     }
+
+    // Affected workspaces resolve internal deps through their built dist/,
+    // so build any unchanged upstream workspaces first (e.g. a next-only
+    // change still needs @yamblog/core built).
+    selected = withInternalDependencies(workspaces, selected);
   }
 }
 
