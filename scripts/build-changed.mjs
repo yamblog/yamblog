@@ -49,6 +49,19 @@ function runBuild(rootDir, workspace) {
   }
 }
 
+/**
+ * Expand a set of workspaces with their transitive internal (workspace)
+ * dependencies, so upstream packages get built before the ones that import
+ * them through dist/.
+ *
+ * @param {Array<{ name: string, internalDependencies: string[] }>} allWorkspaces
+ *   Every buildable workspace, used to look up dependencies by name.
+ * @param {Array<{ name: string, internalDependencies: string[] }>} selectedWorkspaces
+ *   The affected workspaces to expand.
+ * @returns {Array<{ name: string, internalDependencies: string[] }>}
+ *   The selected workspaces plus their dependencies, unordered (sort with
+ *   sortWorkspacesTopologically before building).
+ */
 function withInternalDependencies(allWorkspaces, selectedWorkspaces) {
   const byName = new Map(allWorkspaces.map((workspace) => [workspace.name, workspace]));
   const result = new Map(selectedWorkspaces.map((workspace) => [workspace.name, workspace]));
