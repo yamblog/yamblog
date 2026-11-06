@@ -11,6 +11,6 @@
   "dependencies": {
     "@yamblog/astro": "workspace:*",
     "@yamblog/core": "workspace:*",
-    "astro": "7.4.4"
+    "astro": "7.4.5"
   }
 }
