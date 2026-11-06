@@ -19,7 +19,7 @@
   },
   "dependencies": {
     "@yamblog/core": "^2.0.0",
-    "react-markdown": "^9.0.0"
+    "react-markdown": "^10.1.0"
   },
   "peerDependencies": {
     "react": ">=18.0.0"
