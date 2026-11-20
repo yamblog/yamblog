@@ -138,5 +138,6 @@ post.videoUrl; // string | undefined — typed automatically
 - [Astro recipe](./recipes/astro.md) — Content Layer integration
 - [React recipe](./recipes/react.md) — Vite SPA integration
 - [Extensibility](./extensibility.md) — stable IDs, comments, analytics
+- [Security and content trust](./security.md) — raw HTML, `sanitize`, JSON-LD escaping
 - [AI agent authoring](./ai-agent-authoring.md) — agent-first workflow
 - [Prompt for LLMs](./prompt-for-llms.md) — copy-paste integration prompt for coding agents

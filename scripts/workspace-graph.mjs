@@ -5,11 +5,13 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT_FILES_THAT_IMPACT_ALL = new Set([
   'bun.lock',
+  'bunfig.toml',
   'package.json',
   'tsconfig.base.json',
+  'eslint.config.mjs',
 ]);
 
-const ROOT_PREFIXES_THAT_IMPACT_ALL = ['scripts/'];
+const ROOT_PREFIXES_THAT_IMPACT_ALL = ['scripts/', '.github/'];
 
 function readJson(filePath) {
   return JSON.parse(readFileSync(filePath, 'utf8'));
@@ -117,6 +119,49 @@ export function resolveDefaultSinceRef(rootDir) {
   }
 
   return null;
+}
+
+/**
+ * Decide which buildable workspaces to build.
+ *
+ * Falls back to every workspace (instead of throwing) when the baseline ref
+ * is not present in the clone, e.g. the `before` SHA of a force-push, or when
+ * no common ancestor with HEAD can be found.
+ *
+ * @param {string} rootDir
+ * @param {Array<object>} workspaces Buildable workspaces.
+ * @param {{ all?: boolean, since?: string | null, head?: string }} options
+ * @returns {{ selected: Array<object>, sinceRef: string | null, reason: 'all' | 'no-baseline' | 'missing-ref' | 'no-merge-base' | 'changed' }}
+ */
+export function selectWorkspacesToBuild(rootDir, workspaces, options = {}) {
+  const { all = false, since = null, head = 'HEAD' } = options;
+
+  if (all) {
+    return { selected: workspaces, sinceRef: null, reason: 'all' };
+  }
+
+  const sinceRef = since ?? resolveDefaultSinceRef(rootDir);
+
+  if (!sinceRef) {
+    return { selected: workspaces, sinceRef: null, reason: 'no-baseline' };
+  }
+
+  if (!refExists(rootDir, `${sinceRef}^{commit}`)) {
+    return { selected: workspaces, sinceRef, reason: 'missing-ref' };
+  }
+
+  let changedFiles;
+  try {
+    changedFiles = getChangedFiles(rootDir, sinceRef, head);
+  } catch {
+    return { selected: workspaces, sinceRef, reason: 'no-merge-base' };
+  }
+
+  return {
+    selected: collectAffectedWorkspaces(workspaces, changedFiles),
+    sinceRef,
+    reason: 'changed',
+  };
 }
 
 export function getChangedFiles(rootDir, sinceRef, headRef = 'HEAD') {

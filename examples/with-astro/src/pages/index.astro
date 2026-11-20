@@ -1,5 +1,13 @@
 ---
+import { getCollection } from 'astro:content';
 import Layout from '../layouts/Layout.astro';
+
+// Posts from the yamblog Content Layer loader (src/content.config.ts)
+const entries = await getCollection('blog');
+const latest = entries
+  .filter((entry) => !entry.data.draft)
+  .sort((a, b) => b.data.date.getTime() - a.data.date.getTime())
+  .slice(0, 3);
 ---
 
 <Layout title="Yamblog + Astro Example">
@@ -8,6 +16,13 @@ import Layout from '../layouts/Layout.astro';
     <p style="color: #71717a; margin-bottom: 2rem;">
       A working example of <strong>@yamblog/astro</strong> — file-based blogging with the Astro Content Layer API.
     </p>
+    <ul style="list-style: none; margin-bottom: 2rem;">
+      {latest.map((entry) => (
+        <li style="margin-bottom: 0.5rem;">
+          <a href={`/blog/${entry.data.slug}`}>{entry.data.title}</a>
+        </li>
+      ))}
+    </ul>
     <a
       href="/blog"
       style="display: inline-block; background: #18181b; color: #fff; padding: 0.5rem 1.25rem; border-radius: 6px; text-decoration: none;"

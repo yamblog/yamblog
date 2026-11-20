@@ -1,12 +1,55 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 import BlogListPage from '@yamblog/astro/components/BlogListPage.astro';
+import { serializeJsonLd } from '@yamblog/core';
 import { blog } from '../../lib/blog';
 
-const query = Astro.url.searchParams.get('q') ?? undefined;
-const posts = query ? await blog.search(query) : await blog.getPosts();
+// This page is prerendered (static output, no adapter), so Astro.url has no
+// query string at build time. The search form is handled in the browser below
+// against a search index embedded in the page. For server-side search, add an
+// adapter and `export const prerender = false`, then read
+// Astro.url.searchParams.get('q') and call blog.search(query).
+const posts = await blog.getPosts();
+const index = await blog.generateSearchIndex();
 ---
 
 <Layout title="Blog" description="All posts">
-  <BlogListPage posts={posts} query={query} />
+  <BlogListPage posts={posts} basePath={blog.basePath} />
+  <p id="search-status" hidden style="max-width: 42rem; margin: 0 auto; padding: 0 1rem;"></p>
+  <!-- serializeJsonLd escapes "<", so post text cannot close this script tag -->
+  <script type="application/json" id="search-index" set:html={serializeJsonLd(index)} />
 </Layout>
+
+<script>
+  type Entry = { slug: string; title: string; excerpt?: string; tags: string[] };
+
+  const query = new URLSearchParams(location.search).get('q')?.trim() ?? '';
+  const input = document.querySelector<HTMLInputElement>('form input[name="q"]');
+  if (input) input.value = query;
+
+  if (query) {
+    const index: Entry[] = JSON.parse(document.getElementById('search-index')?.textContent ?? '[]');
+    const q = query.toLowerCase();
+    const matches = new Set(
+      index
+        .filter((e) =>
+          e.title.toLowerCase().includes(q) ||
+          (e.excerpt ?? '').toLowerCase().includes(q) ||
+          e.tags.some((t) => t.toLowerCase().includes(q)),
+        )
+        .map((e) => e.slug),
+    );
+
+    for (const link of document.querySelectorAll<HTMLAnchorElement>('main li > a[href]')) {
+      const slug = link.pathname.split('/').filter(Boolean).pop() ?? '';
+      const item = link.closest('li');
+      if (item) item.hidden = !matches.has(decodeURIComponent(slug));
+    }
+
+    const status = document.getElementById('search-status');
+    if (status) {
+      status.hidden = false;
+      status.textContent = `${matches.size} result${matches.size === 1 ? '' : 's'} for "${query}"`;
+    }
+  }
+</script>

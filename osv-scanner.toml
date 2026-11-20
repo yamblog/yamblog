@@ -2,6 +2,10 @@
 #
 # Every ignore needs a reason and an expiry (`ignoreUntil`) so it gets
 # re-reviewed; when it expires the scan fails again until it is re-triaged.
+# No exceptions, including false positives: re-check them when they expire.
+#
+# Do not ignore advisories that have a fix: bump the dependency instead
+# (e.g. astro/next in examples/ and website/).
 
 [[IgnoredVulns]]
 # zod: memory exhaustion validating oversized constrained collections.
@@ -26,4 +30,5 @@ reason = "Dev-only (eslint/typescript-eslint); fix requires minimatch major the 
 # collides with our private example workspace `examples/with-next`
 # (private: true, resolved via workspace:, never fetched from npm).
 id = "MAL-2025-39364"
+ignoreUntil = 2027-02-01T00:00:00Z
 reason = "Name collision with private local workspace examples/with-next; not installed from npm"

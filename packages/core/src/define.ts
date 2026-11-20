@@ -13,14 +13,24 @@ const DEFAULT_CONTENT_DIR = 'src/content/posts';
 
 /**
  * Detects the site URL from common environment variables.
- * Priority: SITE → PUBLIC_SITE_URL → NEXT_PUBLIC_BASE_URL → VERCEL_URL → ''
+ * Priority: SITE → PUBLIC_SITE_URL → NEXT_PUBLIC_SITE_URL → NEXT_PUBLIC_BASE_URL
+ * → VERCEL_PROJECT_PRODUCTION_URL (production deployments only) → VERCEL_URL → ''
+ *
+ * On Vercel, VERCEL_URL is the per-deployment host (project-abc123.vercel.app)
+ * even for production builds, so production deployments prefer the project's
+ * production domain. Preview deployments keep using VERCEL_URL, since
+ * VERCEL_PROJECT_PRODUCTION_URL is set there too.
  */
 function detectSiteUrl(): string {
-  if (process.env.SITE) return process.env.SITE;
-  if (process.env.PUBLIC_SITE_URL) return process.env.PUBLIC_SITE_URL;
-  if (process.env.NEXT_PUBLIC_SITE_URL) return process.env.NEXT_PUBLIC_SITE_URL;
-  if (process.env.NEXT_PUBLIC_BASE_URL) return process.env.NEXT_PUBLIC_BASE_URL;
-  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
+  const env = process.env;
+  if (env.SITE) return env.SITE;
+  if (env.PUBLIC_SITE_URL) return env.PUBLIC_SITE_URL;
+  if (env.NEXT_PUBLIC_SITE_URL) return env.NEXT_PUBLIC_SITE_URL;
+  if (env.NEXT_PUBLIC_BASE_URL) return env.NEXT_PUBLIC_BASE_URL;
+  if (env.VERCEL_ENV === 'production' && env.VERCEL_PROJECT_PRODUCTION_URL) {
+    return `https://${env.VERCEL_PROJECT_PRODUCTION_URL}`;
+  }
+  if (env.VERCEL_URL) return `https://${env.VERCEL_URL}`;
   return '';
 }
 
@@ -34,7 +44,9 @@ function resolveContentDir(contentDir: string): string {
  * Creates a blog instance with sensible defaults.
  *
  * - Content dir defaults to `src/content/posts` relative to cwd
- * - Site URL is auto-detected from SITE / PUBLIC_SITE_URL / NEXT_PUBLIC_BASE_URL / VERCEL_URL
+ * - Site URL is auto-detected from SITE / PUBLIC_SITE_URL / NEXT_PUBLIC_SITE_URL /
+ *   NEXT_PUBLIC_BASE_URL, then on Vercel from VERCEL_PROJECT_PRODUCTION_URL
+ *   (production deployments) or VERCEL_URL (preview deployments)
  * - Pass a custom Zod schema to add typed custom frontmatter fields
  * - Every method has a synchronous twin (`getPostsSync`, …) for Pages Router,
  *   module-scope constants, and standalone build scripts

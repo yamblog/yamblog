@@ -22,8 +22,12 @@ const post = await blog.getPostBySlug('my-first-post');
 console.log(post.id); // "blog-my-first-post"
 ```
 
-The ID is stable across renames of the markdown file, changes to the title, or
-re-ordering of posts. As long as the `slug` is unchanged, the ID is unchanged.
+The ID is stable across changes to the title, edits to the content, and
+re-ordering of posts. It is **not** stable across renames of the markdown file:
+the slug comes from the filename, so renaming `my-first-post.md` changes both the
+slug and the ID, and anything keyed on the old ID (comments, analytics) is orphaned.
+To rename a file without changing its ID, keep the slug the same with a custom
+[`slugify`](#custom-slug-generator).
 
 ## Comments
 
@@ -99,7 +103,8 @@ const index = await blog.generateSearchIndex();
 // [{ id, slug, title, excerpt, tags, category, author, date, readingTime }, ...]
 
 // Write to a static file for Vite to import, or serve as an API route
-import { writeFileSync } from 'fs';
+import { mkdirSync, writeFileSync } from 'fs';
+mkdirSync('public', { recursive: true });
 writeFileSync('public/search-index.json', JSON.stringify(index));
 ```
 

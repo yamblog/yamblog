@@ -1,6 +1,9 @@
 import { z } from 'zod';
 import { defaultSchema } from './types.js';
 import type { Post, RelatedPostsConfig } from './types.js';
+import { assertPostHasField } from './guards.js';
+
+const TAGS_HINT = "pass relatedPosts.scorer or relatedPosts.strategy: 'category'";
 
 function defaultScorer<TSchema extends z.ZodObject<z.ZodRawShape> = typeof defaultSchema>(
   strategy: RelatedPostsConfig['strategy'] = 'tags+category',
@@ -10,6 +13,8 @@ function defaultScorer<TSchema extends z.ZodObject<z.ZodRawShape> = typeof defau
     const d = candidate as Post;
     let score = 0;
     if (strategy === 'tags' || strategy === 'tags+category') {
+      assertPostHasField(c, 'tags', 'getRelatedPosts()', TAGS_HINT);
+      if (c.tags.length > 0) assertPostHasField(d, 'tags', 'getRelatedPosts()', TAGS_HINT);
       const sharedTags = c.tags.filter(t => d.tags.includes(t));
       score += sharedTags.length * 2;
     }

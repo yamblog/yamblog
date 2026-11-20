@@ -1,6 +1,7 @@
 import ReactMarkdown from 'react-markdown';
-import type { Components } from 'react-markdown';
-import type { PluggableList } from 'unified';
+import type { Components, Options as MarkdownOptions } from 'react-markdown';
+
+type PluggableList = NonNullable<MarkdownOptions['remarkPlugins']>;
 
 export type MarkdownRendererProps = {
   content: string;

@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { blog } from "@/lib/blog";
 
-type Props = { searchParams: Promise<{ q?: string }> };
+type Props = { searchParams: Promise<{ q?: string | string[] }> };
 
 export default async function BlogIndexPage({ searchParams }: Props) {
-  const { q } = await searchParams;
+  const params = await searchParams;
+  // A repeated ?q= arrives as an array
+  const q = Array.isArray(params.q) ? params.q[0] : params.q;
   const posts = q ? await blog.search(q) : await blog.getPosts();
 
   return (
@@ -25,12 +27,12 @@ export default async function BlogIndexPage({ searchParams }: Props) {
           Search
         </button>
         {q && (
-          <a
+          <Link
             href="/blog"
             className="px-3 py-1.5 text-sm rounded border border-zinc-300 dark:border-zinc-700 hover:opacity-80"
           >
             Clear
-          </a>
+          </Link>
         )}
       </form>
 
@@ -57,6 +59,7 @@ export default async function BlogIndexPage({ searchParams }: Props) {
                 year: "numeric",
                 month: "long",
                 day: "numeric",
+                timeZone: "UTC",
               })}{" "}
               &middot; {post.readingTime} min read &middot;{" "}
               {post.author}

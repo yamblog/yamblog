@@ -30,9 +30,16 @@ That's it. `defineBlog(contentDir, siteUrl)` resolves the content dir relative t
 and the site URL flows through to `generateRss` and `generateSitemap`
 automatically — no need to repeat it at every call site.
 
+`import.meta.env.SITE` is the `site` option from `astro.config.mjs`. Set `site` to
+your absolute production URL: without it the RSS feed, sitemap and JSON-LD contain
+relative links, which feed readers reject.
+
 **Zero-config:** `defineBlog()` with no arguments defaults to `src/content/posts` and
-auto-detects the site URL from `SITE`, `PUBLIC_SITE_URL`, `NEXT_PUBLIC_SITE_URL`,
-`NEXT_PUBLIC_BASE_URL`, or `VERCEL_URL` (checked in that order).
+auto-detects the site URL from the process environment: `SITE`, `PUBLIC_SITE_URL`,
+`NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_BASE_URL`, then on Vercel
+`VERCEL_PROJECT_PRODUCTION_URL` (production deployments only) or `VERCEL_URL`
+(checked in that order). Astro's `site` config is not one of these, so prefer
+passing `import.meta.env.SITE` explicitly as above.
 
 **Full config:** pass an options object for schema, sorting, related posts, etc.:
 
@@ -78,14 +85,17 @@ src/
 ---
 // src/pages/blog/index.astro
 import BlogListPage from '@yamblog/astro/components/BlogListPage.astro';
-import { blog } from '../lib/blog';
+import { blog } from '../../lib/blog';
 
-const query = Astro.url.searchParams.get('q') ?? undefined;
-const posts = query ? await blog.search(query) : await blog.getPosts();
+const posts = await blog.getPosts();
 ---
 
-<BlogListPage posts={posts} query={query} title="Blog" />
+<BlogListPage posts={posts} title="Blog" />
 ```
+
+`BlogListPage` props: `posts`, `query?` (shown in the search box), `basePath?`
+(default `/blog`) and `title?` (default `Blog`). Its search form submits `?q=`, which
+only filters results on an on-demand page; see [Search](#5-search).
 
 ### Building your own listing
 
@@ -103,7 +113,7 @@ const posts = await blog.getPosts();
         <h2>{post.title}</h2>
       </a>
       <p class="meta">
-        {post.date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+        {post.date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' })}
         · {post.readingTime} min read
         · {post.author}
       </p>
@@ -153,14 +163,30 @@ const jsonLd = {
 <BlogPostPage post={post} adjacent={adjacent} jsonLd={jsonLd} />
 ```
 
+`BlogPostPage` props:
+
+| Prop | Type | Notes |
+| --- | --- | --- |
+| `post` | `Post` | required |
+| `adjacent` | `AdjacentPosts` | `{ prev, next }` from `blog.getAdjacentPosts(slug)` |
+| `basePath` | `string` | link prefix, default `/blog` |
+| `jsonLd` | `Record<string, unknown>` | rendered as `<script type="application/ld+json">`, escaped so `</script>` in a title cannot break out |
+| `sanitize` | `boolean` | default `false`. The body is rendered with `toHtml`, which passes raw HTML through; set `sanitize` when post content is not fully trusted |
+
+Dates are shown in UTC, so a date-only `date: 2026-01-15` shows as January 15 on
+every build machine. See [Security and content trust](../security.md) for what
+`sanitize` removes.
+
 ### Building your own post layout
 
 Use `toHtml` from `@yamblog/remark` for full pipeline control — compose any
-`@yamblog/remark` plugins and rehype transforms:
+`@yamblog/remark` plugins and rehype transforms. `toHtml` passes raw HTML through by
+default; add `sanitize: true` when authors are not fully trusted. JSON-LD goes
+through `serializeJsonLd` so a `</script>` in a title cannot break out of the tag:
 
 ```astro
 ---
-import { buildPostUrl } from '@yamblog/core';
+import { buildPostUrl, serializeJsonLd } from '@yamblog/core';
 import { blog } from '../../lib/blog';
 import { toHtml, remarkToc, remarkEmbed } from '@yamblog/remark';
 
@@ -175,7 +201,9 @@ const adjacent = await blog.getAdjacentPosts(slug!);
 const related  = await blog.getRelatedPosts(slug!);
 
 const html = await toHtml(post.content, {
-  remarkPlugins: [remarkToc, remarkEmbed],
+  // ids: true gives headings ids that match the TOC links
+  remarkPlugins: [remarkEmbed, [remarkToc, { ids: true }]],
+  sanitize: true,
 });
 
 const jsonLd = {
@@ -189,7 +217,7 @@ const jsonLd = {
 };
 ---
 
-<script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+<script type="application/ld+json" set:html={serializeJsonLd(jsonLd)} />
 
 <article class="prose" set:html={html} />
 
@@ -264,12 +292,20 @@ const posts = await blog.getPostsByTag(tag!);
 
 ## 5. Search
 
-### Server-side (Astro SSR or query param)
+### Server-side (on-demand rendering only)
+
+`Astro.url.searchParams` is only populated when the page is rendered per request.
+In Astro's default static output the page is prerendered once without a query, so
+the form would just reload the full list. Server-side search needs an
+[adapter](https://docs.astro.build/en/guides/on-demand-rendering/) (Node, Vercel,
+Netlify, …) and `export const prerender = false` on the page:
 
 ```astro
 ---
 // src/pages/blog/index.astro
 import { blog } from '../../lib/blog';
+
+export const prerender = false;
 
 const query = Astro.url.searchParams.get('q') ?? undefined;
 const posts = query ? await blog.search(query) : await blog.getPosts();
@@ -303,6 +339,8 @@ export const GET: APIRoute = async () => {
 ```
 
 Then fetch `/search-index.json` on the client and filter by `title`, `excerpt`, `tags`.
+This works in static output. `clientSearch` from `@yamblog/react` accepts these
+index entries directly if you use React islands.
 
 ---
 
@@ -353,13 +391,14 @@ export const GET: APIRoute = async () => {
   });
 
   return new Response(xml, {
-    headers: {
-      'Content-Type':  'application/xml; charset=utf-8',
-      'Cache-Control': 's-maxage=3600, stale-while-revalidate',
-    },
+    headers: { 'Content-Type': 'application/xml; charset=utf-8' },
   });
 };
 ```
+
+In static output this endpoint is written to `dist/feed.xml` at build time and
+response headers are discarded; set caching on your host instead. Headers such as
+`Cache-Control` only apply when the endpoint is rendered on demand.
 
 Add a `<link>` tag in your layout so browsers discover it:
 
@@ -380,10 +419,7 @@ export const GET: APIRoute = async () => {
   const xml = await blog.generateSitemap();
 
   return new Response(xml, {
-    headers: {
-      'Content-Type':  'application/xml; charset=utf-8',
-      'Cache-Control': 's-maxage=3600, stale-while-revalidate',
-    },
+    headers: { 'Content-Type': 'application/xml; charset=utf-8' },
   });
 };
 ```
@@ -399,7 +435,7 @@ object is straightforward to write once in your own layout. Use `buildPostUrl`
 
 ```astro
 ---
-import { buildPostUrl } from '@yamblog/core';
+import { buildPostUrl, serializeJsonLd } from '@yamblog/core';
 import { blog } from '../../lib/blog';
 
 // `post` comes from your page — getStaticPaths props or blog.getPostBySlug()
@@ -417,10 +453,14 @@ const jsonLd = {
 };
 ---
 
-<script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+<script type="application/ld+json" set:html={serializeJsonLd(jsonLd)} />
 ```
 
-Pass it to `BlogPostPage` via the `jsonLd` prop, or inject it yourself in your own layout.
+Pass it to `BlogPostPage` via the `jsonLd` prop (the component escapes it), or inject
+it yourself as above. Never use `set:html={JSON.stringify(jsonLd)}`: `JSON.stringify`
+does not escape `<`, so a title containing `</script>` would end the script element
+and inject markup. If your installed `@yamblog/core` predates `serializeJsonLd`, use
+`JSON.stringify(jsonLd).replace(/</g, '\\u003c')`.
 
 ---
 
@@ -435,16 +475,24 @@ import remarkDirective from 'remark-directive';
 
 const html = await toHtml(post.content, {
   remarkPlugins: [
-    [remarkToc, { heading: 'Contents', maxDepth: 4 }],
+    [remarkToc, { heading: 'Contents', maxDepth: 4, ids: true }],
     remarkEmbed,
     remarkDirective,
-    remarkInteractive,
+    [remarkInteractive, { components: ['counter-demo'], output: 'element' }],
   ],
+  sanitize: true,
 });
 ---
 
 <article class="prose" set:html={html} />
 ```
+
+- `remarkToc` with `ids: true` gives every heading an `id` matching its TOC link.
+  Without it, the TOC links have no targets unless you add `rehype-slug`.
+- `remarkInteractive` with `components` only converts the directives you list;
+  `output: 'element'` emits real elements, which survive `sanitize: true`.
+- `sanitize: true` drops raw HTML and dangerous URLs. Leave it off only when every
+  author is trusted. See [Security and content trust](../security.md).
 
 If you only need raw markdown (e.g., to pass to a different renderer), `post.content` is
 the untransformed string — `toHtml` is opt-in.
@@ -463,7 +511,8 @@ import { defineCollection } from 'astro:content';
 import { yamblogLoader } from '@yamblog/astro';
 
 const blog = defineCollection({
-  loader: yamblogLoader({ base: './src/content/posts' }),
+  // relative to the project root, or an absolute path
+  loader: yamblogLoader({ base: 'src/content/posts' }),
 });
 
 export const collections = { blog };
@@ -483,6 +532,12 @@ custom `schema` option you pass) and always adds the system fields (`id`,
 Astro too. Both approaches read the same markdown files — pick whichever API
 you prefer, or mix them (e.g. collections for pages, the `blog` instance for
 RSS/sitemap endpoints).
+
+Loader options: `base` (required), `schema` (custom Zod schema) and `failOnError`
+(default `false`: invalid frontmatter or a missing directory is logged and the build
+keeps going; set `true` to fail the build. The default becomes `true` in the next
+major). In `astro dev` the collection reloads when a
+`.md`/`.mdx` file under `base` changes.
 
 ---
 

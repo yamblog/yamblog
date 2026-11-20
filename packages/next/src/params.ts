@@ -5,8 +5,9 @@ import type { Blog } from '@yamblog/core';
  *
  * @example
  * // app/blog/[slug]/page.tsx
- * export { generateStaticParams } from '@yamblog/next';
- * // or with a custom blog instance:
+ * import { createStaticParams } from '@yamblog/next';
+ * import { blog } from '@/lib/blog';
+ *
  * export async function generateStaticParams() {
  *   return createStaticParams(blog);
  * }

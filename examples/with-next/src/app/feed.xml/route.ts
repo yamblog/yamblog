@@ -4,5 +4,6 @@ import { blog } from "@/lib/blog";
 export const GET = createRssHandler(blog, {
   title: "Yamblog Example",
   description: "A blog powered by Yamblog",
-  author: "Your Name",
+  // RSS 2.0 expects an email address here; validators flag bare names
+  author: "you@example.com (Your Name)",
 });

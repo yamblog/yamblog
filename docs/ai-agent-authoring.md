@@ -14,7 +14,7 @@ validate, and update programmatically.
 - Create a `.md` file in `content/posts/` with valid frontmatter
 - Populate required and optional metadata fields
 - Write the body in markdown with correct heading hierarchy
-- Validate the post by calling `blog.getPostBySlug(slug)` — any parse error throws
+- Validate every post by calling `blog.validateContent()` — any parse or schema error throws, naming the file
 - Update an existing post by editing frontmatter or body
 - Set `draft: false` to publish, `draft: true` to unpublish
 
@@ -22,6 +22,8 @@ validate, and update programmatically.
 
 1. **Choose a slug** — derive a stable, URL-safe slug from the title.
    Rules: lowercase, hyphens, ASCII only. Example: `"How I Built X"` → `how-i-built-x`.
+   The slug comes from the filename, so renaming the file changes the slug, the URL
+   and the post `id`.
 
 2. **Write frontmatter** — populate all required fields, plus optional ones as relevant:
 
@@ -37,6 +39,8 @@ validate, and update programmatically.
    ```
 
    Do not include `slug` in frontmatter — it is derived from the filename automatically.
+   Use `---` (YAML) front matter. Executable front matter (`---js`, `---javascript`,
+   `---coffee`) is rejected.
 
 3. **Write the body** — compose markdown. Start with `##` headings (not `#`, which
    duplicates the title). Keep paragraphs focused.
@@ -46,12 +50,15 @@ validate, and update programmatically.
    ```typescript
    import { defineBlog } from '@yamblog/core';
    const blog = defineBlog('content/posts');
-   const post = await blog.getPostBySlug('how-i-built-x');
-   console.log(post.id, post.readingTime);
+   const posts = await blog.validateContent(); // parses every file, drafts included
+   const post = posts.find((p) => p.slug === 'how-i-built-x');
+   console.log(post?.id, post?.readingTime);
    ```
 
-   If the frontmatter is invalid (wrong type, missing required field) this throws —
-   fix the file and retry.
+   If any frontmatter is invalid (wrong type, missing required field) this throws
+   with the slug and file name — fix the file and retry. Do not validate with
+   `getPostBySlug`: it skips drafts, so a valid post with `draft: true` throws
+   `PostNotFoundError`.
 
 5. **Publish** — set `draft: false` (already set in step 2 if publishing immediately).
 
@@ -88,11 +95,12 @@ Install and configure Yamblog:
    import { defineBlog } from "@yamblog/core";
    export const blog = defineBlog("content/posts");
    // siteUrl auto-detected from SITE / PUBLIC_SITE_URL / NEXT_PUBLIC_SITE_URL /
-   // NEXT_PUBLIC_BASE_URL / VERCEL_URL
+   // NEXT_PUBLIC_BASE_URL, then on Vercel VERCEL_PROJECT_PRODUCTION_URL
+   // (production only) / VERCEL_URL
 
 4. Wire routes (Next.js App Router example)
    app/blog/page.tsx          → blog.getPosts()
-   app/blog/[slug]/page.tsx   → blog.getPostBySlug(slug)
+   app/blog/[slug]/page.tsx   → blog.findPostBySlug(slug), notFound() when null
    app/feed.xml/route.ts      → createRssHandler(blog, { title, description })
    app/sitemap.ts             → createSitemapExport(blog)
 
@@ -101,8 +109,11 @@ Install and configure Yamblog:
    npm run build → no type errors
 
 6. Optional enhancements
-   - OG image: createOgImageHandler in app/blog/[slug]/opengraph-image/route.ts
-   - Breadcrumb JSON-LD: generateBreadcrumbJsonLd in post page
+   - OG image: createOgImageHandler in app/blog/[slug]/opengraph-image/route.ts,
+     linked via generatePostMetadata(post, { ogImage: `/blog/${post.slug}/opengraph-image` })
+   - JSON-LD: pass generateBlogJsonLd(post, …) to BlogPostPage's jsonLd prop
+     (never JSON.stringify into a <script> yourself; use serializeJsonLd from @yamblog/core)
+   - Breadcrumb JSON-LD: generateBreadcrumbJsonLd with absolute URLs in post page
    - Static params: createStaticParams in generateStaticParams
    - Search index: blog.generateSearchIndex() → public/search-index.json
    - Wire post.id into comments / analytics service
@@ -126,9 +137,9 @@ Install and configure Yamblog:
 
 | Field | Value |
 |-------|-------|
-| `id` | `"blog-{slug}"` — stable foreign key |
+| `id` | `"blog-{slug}"` — stable while the filename (slug) stays the same |
 | `slug` | Derived from filename — do not add to frontmatter |
-| `readingTime` | Minutes at 200 WPM |
+| `readingTime` | Minutes at 200 words per minute (CJK text at 500 characters per minute) |
 | `content` | Raw markdown body |
 
 ## Validation errors
@@ -140,4 +151,5 @@ Common mistakes and how to fix them:
 | `date` is not a valid date | Use ISO 8601 format: `"2026-01-15"` |
 | `tags` is not an array | Use YAML array: `tags: ["a", "b"]` |
 | `PostNotFoundError` (`Post not found: {slug}`) | Check the slug matches the sanitized filename (lowercase, dashes, minus `.md`); catch with `instanceof PostNotFoundError`, or use `findPostBySlug` which returns `null` |
-| `Schema validation failed` | Check all required fields are present and typed correctly |
+| `Invalid frontmatter in post "{slug}" ({file}):` | Check all required fields are present and typed correctly; the lines after it name each failing field |
+| `yamblog: failed to parse front matter in post "{slug}" ({file})` | The YAML is malformed (bad indentation, unquoted `:`), or the file uses `---js` front matter, which is not supported |

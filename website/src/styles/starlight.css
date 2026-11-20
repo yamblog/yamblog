@@ -1,5 +1,5 @@
 /* Yamblog theme for Starlight — matches the landing page design tokens */
-@import url('https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Geist:wght@300;400;450;500;600&family=Geist+Mono:wght@400;500&display=swap');
+/* Fonts are loaded by <link> tags in src/lib/fonts.ts (no @import chain). */
 
 :root {
   --sl-font:      'Geist', ui-sans-serif, system-ui, -apple-system, sans-serif;

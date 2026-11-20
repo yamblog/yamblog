@@ -1,4 +1,7 @@
 ---
+import { fontLinks } from '../lib/fonts';
+import { rybbitScriptAttrs } from '../lib/analytics';
+
 interface Props {
   title?: string;
   description?: string;
@@ -28,8 +31,10 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
   <meta property="og:site_name" content="Yamblog" />
   <meta name="twitter:card" content="summary" />
   <link rel="alternate" type="application/rss+xml" title="Yamblog Blog" href="/feed.xml" />
-  <link rel="sitemap" href="/sitemap.xml" />
+  <link rel="sitemap" href="/sitemap-index.xml" />
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  {fontLinks.map((attrs) => <link {...attrs} />)}
+  <script is:inline {...rybbitScriptAttrs}></script>
   <!-- Dark mode — must run sync to prevent flash of wrong theme -->
   <script is:inline>
     (function () {

@@ -33,7 +33,7 @@ export function BlogPostPage({ post, adjacent, onBack, onNavigate }: Props) {
 
       <h1 style={{ fontSize: '2rem', fontWeight: 700, marginBottom: '0.75rem' }}>{post.title}</h1>
       <p style={{ fontSize: '0.875rem', color: '#71717a', marginBottom: '2rem' }}>
-        {post.date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+        {post.date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' })}
         {' · '}{post.readingTime} min read{' · '}{post.author}
       </p>
 

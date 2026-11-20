@@ -1,14 +1,6 @@
-import { normalizeBasePath, normalizeSiteUrl, DEFAULT_BASE_PATH } from './utils.js';
+import { normalizeBasePath, normalizeSiteUrl, DEFAULT_BASE_PATH, escapeXml, warnIfRelativeSiteUrl } from './utils.js';
+import { assertPostsHaveField } from './guards.js';
 import type { Post, RssOptions } from './types.js';
-
-function escapeXml(str: string): string {
-  return str
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&apos;');
-}
 
 /**
  * Generates an RSS 2.0 XML string for the given posts.
@@ -17,19 +9,22 @@ function escapeXml(str: string): string {
  */
 export function generateRss(posts: Post[], options: RssOptions & { siteUrl: string }): string {
   const { title, description, author, language = 'en-us' } = options;
-  const siteUrl = normalizeSiteUrl(options.siteUrl);
+  const siteUrl = normalizeSiteUrl(options.siteUrl ?? '');
   const basePath = normalizeBasePath(options.basePath ?? DEFAULT_BASE_PATH);
   const blogUrl = `${siteUrl}${basePath}`;
   const feedUrl = options.feedUrl ?? `${siteUrl}/feed.xml`;
   const published = options.includeDrafts ? posts : posts.filter(post => !post.draft);
+  warnIfRelativeSiteUrl(siteUrl, 'generateRss');
+  assertPostsHaveField(published, 'title', 'generateRss()');
+  assertPostsHaveField(published, 'date', 'generateRss()');
 
   const items = published
     .map(post => {
       const url = `${blogUrl}/${post.slug}`;
       return `    <item>
       <title>${escapeXml(post.title)}</title>
-      <link>${url}</link>
-      <guid>${url}</guid>
+      <link>${escapeXml(url)}</link>
+      <guid>${escapeXml(url)}</guid>
       <pubDate>${post.date.toUTCString()}</pubDate>
       ${post.excerpt ? `<description>${escapeXml(post.excerpt)}</description>` : ''}
       ${author ? `<author>${escapeXml(author)}</author>` : ''}
@@ -48,7 +43,7 @@ export function generateRss(posts: Post[], options: RssOptions & { siteUrl: stri
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>${escapeXml(title)}</title>
-    <link>${blogUrl}</link>
+    <link>${escapeXml(blogUrl)}</link>
     <atom:link href="${escapeXml(feedUrl)}" rel="self" type="application/rss+xml"/>
     <description>${escapeXml(description)}</description>
     <language>${escapeXml(language)}</language>${lastBuildDate}

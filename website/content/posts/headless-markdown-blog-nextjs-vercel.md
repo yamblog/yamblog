@@ -25,7 +25,7 @@ import { defineBlog } from '@yamblog/core';
 export const blog = defineBlog('content/posts');
 ```
 
-That one line is your CMS. On Vercel you don't even need to configure the site URL — `defineBlog` auto-detects it from `VERCEL_URL` (or set `NEXT_PUBLIC_SITE_URL` for a custom domain). `blog.siteUrl` then flows into every generated URL: RSS, sitemap, canonical links.
+That one line is your CMS. On Vercel you don't even need to configure the site URL — `defineBlog` auto-detects it: production deployments use your production domain (`VERCEL_PROJECT_PRODUCTION_URL`), preview deployments use their own `VERCEL_URL`. Set `NEXT_PUBLIC_SITE_URL` to pin it explicitly. `blog.siteUrl` then flows into every generated URL: RSS, sitemap, canonical links.
 
 Posts are markdown files with validated frontmatter:
 

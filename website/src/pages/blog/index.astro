@@ -1,4 +1,5 @@
 ---
+import { postPath } from '../../lib/urls';
 import { blog } from '../../lib/blog';
 import Landing from '../../layouts/Landing.astro';
 import Nav from '../../components/landing/Nav.astro';
@@ -85,7 +86,7 @@ const formatDate = (date: Date) =>
                 </div>
 
                 <div>
-                  <h2><a href={`/blog/${post.slug}`}>{post.title}</a></h2>
+                  <h2><a href={postPath(post.slug)}>{post.title}</a></h2>
                 </div>
 
                 {post.excerpt && <p class="blog-card-excerpt">{post.excerpt}</p>}

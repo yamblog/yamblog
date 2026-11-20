@@ -1,0 +1,99 @@
+name: Usage stats
+
+# Weekly snapshot of npm downloads, per-version downloads, ecosyste.ms
+# dependents and GitHub stars/forks/traffic, committed to the orphan `stats`
+# branch (data/snapshots/<date>.json + data/weekly.csv). Nothing here touches
+# main, triggers CI, or ships in any package.
+#
+# Optional secret STATS_TOKEN: a fine-grained PAT scoped to this repo with
+# "Administration: read", which the traffic API requires. Without it the
+# traffic section is skipped and everything else is still recorded.
+
+on:
+  schedule:
+    # Weekly, Monday 05:23 UTC. GitHub traffic keeps 14 days and npm
+    # per-version downloads only 7, so this must run at least weekly.
+    - cron: '23 5 * * 1'
+  workflow_dispatch:
+
+concurrency:
+  # One writer to the stats branch at a time; never cancel a run mid-push.
+  group: usage-stats
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  snapshot:
+    name: Snapshot usage stats
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      # Push to the stats branch.
+      contents: write
+    steps:
+      - name: Checkout scripts
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          path: main
+          sparse-checkout: scripts
+          persist-credentials: false
+
+      - name: Setup Node
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
+        with:
+          node-version: 24
+
+      # Check out the stats branch into ./stats, or start it as an orphan
+      # branch with no history on the first run. The token is passed per
+      # command and never written to .git/config.
+      - name: Prepare stats branch
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO_URL: ${{ github.server_url }}/${{ github.repository }}.git
+        run: |
+          set -euo pipefail
+          auth="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)"
+          echo "::add-mask::$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)"
+          git init -q stats
+          cd stats
+          git remote add origin "$REPO_URL"
+          # ls-remote --exit-code: 0 = branch exists, 2 = no such branch,
+          # anything else = a real error, which must fail the job.
+          rc=0
+          git -c http.extraheader="$auth" ls-remote --exit-code --heads origin stats >/dev/null || rc=$?
+          if [ "$rc" -eq 0 ]; then
+            git -c http.extraheader="$auth" fetch -q --depth=1 origin stats
+            git checkout -q -b stats FETCH_HEAD
+            echo "Using existing stats branch."
+          elif [ "$rc" -eq 2 ]; then
+            git checkout -q --orphan stats
+            echo "No stats branch yet; starting an orphan branch."
+          else
+            echo "::error::git ls-remote failed with exit code $rc"
+            exit "$rc"
+          fi
+
+      - name: Collect snapshot
+        env:
+          GH_TRAFFIC_TOKEN: ${{ secrets.STATS_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node main/scripts/usage-stats.mjs --out stats/data
+
+      - name: Commit and push
+        env:
+          GH_TOKEN: ${{ github.token }}
+        working-directory: stats
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add data
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+            exit 0
+          fi
+          git commit -q -m "stats: $(date -u +%F)"
+          auth="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)"
+          git -c http.extraheader="$auth" push -q origin HEAD:refs/heads/stats

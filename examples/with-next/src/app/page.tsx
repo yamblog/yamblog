@@ -21,6 +21,7 @@ export default async function Home() {
                 year: "numeric",
                 month: "long",
                 day: "numeric",
+                timeZone: "UTC",
               })}{" "}
               &middot; {post.readingTime} min read
             </p>

@@ -7,23 +7,43 @@ interface Props {
   adjacent?: AdjacentPosts;
   /** Base path for blog links. Default: "/blog" */
   basePath?: string;
-  /** JSON-LD object to inject as a script tag */
+  /**
+   * JSON-LD object to inject as a script tag. It is serialised with `<`, `>`,
+   * `&`, U+2028 and U+2029 escaped, so frontmatter values cannot close the
+   * script element.
+   */
   jsonLd?: Record<string, unknown>;
+  /**
+   * Sanitise the rendered markdown: raw HTML is not passed through and
+   * dangerous URLs/attributes are removed (yamblog embeds keep working).
+   * Turn this on when post content is not fully trusted (CMS, user or
+   * AI-written posts). Default: false (raw HTML in markdown is rendered as-is).
+   */
+  sanitize?: boolean;
 }
 
-const { post, adjacent, basePath = '/blog', jsonLd } = Astro.props;
+const { post, adjacent, basePath = '/blog', jsonLd, sanitize = false } = Astro.props;
 
-const html = await toHtml(post.content);
+const html = await toHtml(post.content, { sanitize });
 
+// Frontmatter dates are parsed as UTC midnight; format in UTC so the day
+// does not shift with the build machine's timezone.
 const formattedDate = post.date.toLocaleDateString('en-US', {
   year: 'numeric',
   month: 'long',
   day: 'numeric',
+  timeZone: 'UTC',
 });
+
+// Safe to embed in <script>: same JSON, with HTML-significant characters
+// and JS line terminators written as \uXXXX escapes.
+const jsonLdHtml = jsonLd
+  ? JSON.stringify(jsonLd).replace(/[<>&\u2028\u2029]/g, (c) => '\\u' + c.charCodeAt(0).toString(16).padStart(4, '0'))
+  : undefined;
 ---
 
-{jsonLd && (
-  <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+{jsonLdHtml && (
+  <script type="application/ld+json" set:html={jsonLdHtml} />
 )}
 
 <main class="max-w-2xl mx-auto px-4 py-16">

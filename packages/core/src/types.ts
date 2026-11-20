@@ -82,7 +82,7 @@ export type SitemapOptions = {
   includeDrafts?: boolean;
 };
 
-export type LlmsTxtOptions = {
+export type LlmsTxtOptions<TSchema extends z.ZodObject<z.ZodRawShape> = typeof defaultSchema> = {
   /** Section heading. Default: 'Blog' */
   sectionTitle?: string;
   /** Falls back to siteUrl set in createBlog/defineBlog config */
@@ -94,7 +94,7 @@ export type LlmsTxtOptions = {
    * Default: (post) => post.featured === true
    * Pass () => true to include all posts.
    */
-  filter?: (post: Post) => boolean;
+  filter?: (post: Post<TSchema>) => boolean;
   /**
    * Include posts marked `draft: true`. Off by default even when the blog
    * is configured with `includeDrafts: true`. Applied before `filter`.
@@ -139,7 +139,14 @@ export type BlogConfig<TSchema extends z.ZodObject<z.ZodRawShape> = typeof defau
    * Default: false
    */
   includeDrafts?: boolean;
-  /** Zod schema for frontmatter validation. Defaults to defaultSchema */
+  /**
+   * Zod schema for frontmatter validation. Defaults to defaultSchema.
+   * Extend defaultSchema (`defaultSchema.extend({ … })`) to keep the fields
+   * the built-in sort, search, tags, related posts, RSS and sitemap rely on
+   * (title, date, tags); a method that needs a missing field throws an error
+   * naming it. If the schema does not declare `draft`, a literal
+   * `draft: true` in a post's front matter still marks the post as a draft.
+   */
   schema?: TSchema;
   /** Custom sort function. Default: newest first */
   sortBy?: (a: Post<TSchema>, b: Post<TSchema>) => number;
@@ -193,8 +200,8 @@ export type Blog<TSchema extends z.ZodObject<z.ZodRawShape> = typeof defaultSche
   generateRssSync: (options: RssOptions) => string;
   generateSitemap: (options?: SitemapOptions) => Promise<string>;
   generateSitemapSync: (options?: SitemapOptions) => string;
-  generateLlmsTxt: (options?: LlmsTxtOptions) => Promise<string>;
-  generateLlmsTxtSync: (options?: LlmsTxtOptions) => string;
+  generateLlmsTxt: (options?: LlmsTxtOptions<TSchema>) => Promise<string>;
+  generateLlmsTxtSync: (options?: LlmsTxtOptions<TSchema>) => string;
   generateSearchIndex: (options?: SearchIndexOptions) => Promise<SearchIndexEntry[]>;
   generateSearchIndexSync: (options?: SearchIndexOptions) => SearchIndexEntry[];
 };

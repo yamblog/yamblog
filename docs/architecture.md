@@ -112,13 +112,15 @@ Markdown-to-HTML conversion and optional remark plugins.
 
 | Export | Purpose |
 |--------|---------|
-| `toHtml(markdown, options?)` | Converts markdown to an HTML string via a unified pipeline; accepts `remarkPlugins` and `rehypePlugins` |
-| `remarkToc` | Replaces a `## Table of Contents` heading with a generated nested list |
-| `remarkInteractive` | Converts `::component-name{prop=val}` directives to self-closing HTML elements (requires `remark-directive` peer) |
-| `remarkEmbed` | Converts bare YouTube / Vimeo / CodePen URLs to iframes |
+| `toHtml(markdown, options?)` | Converts markdown to an HTML string via a unified pipeline; accepts `remarkPlugins`, `rehypePlugins` and `sanitize` (default `false`: raw HTML passes through) |
+| `remarkToc` | Replaces a `## Table of Contents` heading with a generated nested list; `{ ids: true }` also gives headings matching `id`s |
+| `remarkInteractive` | Converts `::component-name{prop=val}` directives to custom elements (requires `remark-directive` peer); `components` allow-list and `output: 'element'` options |
+| `remarkEmbed` | Converts bare YouTube / Vimeo / CodePen URLs to iframe elements (no `rehype-raw` needed) |
 
 `toHtml` is used internally by `@yamblog/astro`'s `BlogPostPage` and is available
-for any user who wants HTML output without the pre-built components.
+for any user who wants HTML output without the pre-built components. See
+[Security and content trust](./security.md) before rendering content from authors
+you do not fully trust.
 
 ## Monorepo layout
 
@@ -131,7 +133,7 @@ packages/
   remark/     @yamblog/remark
 examples/
   with-next/  Next.js App Router example
-  with-astro/ Astro 5 example
+  with-astro/ Astro example
   with-react/ Vite SPA example
 docs/
   getting-started.md
@@ -142,6 +144,7 @@ docs/
     react.md
     custom-fields.md
   extensibility.md
+  security.md
   ai-agent-authoring.md
   prompt-for-llms.md
   llms-txt.md
