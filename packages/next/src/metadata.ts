@@ -1,4 +1,4 @@
-import { buildPostUrl } from '@yamblog/core';
+import { buildPostUrl, normalizeSiteUrl } from '@yamblog/core';
 import type { Post } from '@yamblog/core';
 
 type BreadcrumbItem = {
@@ -48,7 +48,7 @@ type ResolvedImage = { url: string; width?: number; height?: number; alt?: strin
 
 function resolveUrl(siteUrl: string | undefined, url: string): string {
   if (siteUrl && url.startsWith('/') && !url.startsWith('//')) {
-    return `${siteUrl.replace(/\/+$/, '')}${url}`;
+    return `${normalizeSiteUrl(siteUrl)}${url}`;
   }
   return url;
 }

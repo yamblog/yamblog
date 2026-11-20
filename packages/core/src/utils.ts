@@ -68,11 +68,23 @@ export function defaultSlugify(filename: string): string {
 }
 
 /**
+ * Strips trailing (and optionally leading) slashes in linear time. A regex
+ * such as /\/+$/ backtracks quadratically on long runs of slashes.
+ */
+function trimSlashes(value: string, leading: boolean): string {
+  let start = 0;
+  let end = value.length;
+  if (leading) while (start < end && value.charCodeAt(start) === 47) start++;
+  while (end > start && value.charCodeAt(end - 1) === 47) end--;
+  return value.slice(start, end);
+}
+
+/**
  * Normalizes a URL path prefix: ensures a single leading slash and no
  * trailing slash. '' and '/' both normalize to '' (site root).
  */
 export function normalizeBasePath(basePath: string): string {
-  const trimmed = basePath.replace(/^\/+|\/+$/g, '');
+  const trimmed = trimSlashes(basePath, true);
   return trimmed ? `/${trimmed}` : '';
 }
 
@@ -84,7 +96,7 @@ export const DEFAULT_BASE_PATH = '/blog';
  * 'https://example.com/' → 'https://example.com'
  */
 export function normalizeSiteUrl(siteUrl: string): string {
-  return siteUrl.replace(/\/+$/, '');
+  return trimSlashes(siteUrl, false);
 }
 
 /**
