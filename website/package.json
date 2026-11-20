@@ -18,7 +18,7 @@
   },
   "dependencies": {
     "@astrojs/cloudflare": "^14.4.0",
-    "@astrojs/starlight": "^0.42.0",
+    "@astrojs/starlight": "^0.43.1",
     "@yamblog/core": "workspace:*",
     "@yamblog/remark": "workspace:*",
     "astro": "^7.4.12",
