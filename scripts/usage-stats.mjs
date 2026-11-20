@@ -114,7 +114,7 @@ function num(label, obj, key) {
 }
 
 async function npmStats(pkg) {
-  const enc = pkg.replace('/', '%2F');
+  const enc = pkg.replaceAll('/', '%2F');
   const [week, month, versions, eco] = await Promise.all([
     getJson(`npm last-week ${pkg}`, `https://api.npmjs.org/downloads/point/last-week/${pkg}`),
     getJson(`npm last-month ${pkg}`, `https://api.npmjs.org/downloads/point/last-month/${pkg}`),

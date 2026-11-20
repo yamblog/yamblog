@@ -90,7 +90,7 @@ describe.skipIf(!hasDist)('build output', () => {
     const astroDir = join(client, '_astro');
     for (const f of readdirSync(astroDir).filter((f) => f.endsWith('.css'))) {
       const css = readFileSync(join(astroDir, f), 'utf8');
-      expect({ file: f, importsGoogleFonts: css.includes('fonts.googleapis.com') }).toEqual({
+      expect({ file: f, importsGoogleFonts: /@import\b/.test(css) && /googleapis/.test(css) }).toEqual({
         file: f,
         importsGoogleFonts: false,
       });

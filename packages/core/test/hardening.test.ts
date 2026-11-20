@@ -211,7 +211,8 @@ describe('XML output', () => {
       const calls = warn.mock.calls.map(c => String(c[0]));
       expect(calls.filter(c => c.includes('generateSitemap()')).length).toBe(1);
       expect(calls.filter(c => c.includes('generateRss()')).length).toBe(1);
-      expect(calls.some(c => c.includes('https://x.dev'))).toBe(false);
+      // Exactly the two warnings above: the absolute-URL call must not warn.
+      expect(calls.length).toBe(2);
     } finally {
       warn.mockRestore();
     }
