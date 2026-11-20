@@ -69,6 +69,8 @@ A **new** package must be published once by hand before a trusted publisher can 
 
 Releases published through this workflow carry [provenance attestations](https://docs.npmjs.com/generating-provenance-statements); verify with `npm audit signatures`. Versions published before trusted publishing was set up (2026-11-05; the latest of these are core 2.1.0, astro 1.3.0, next 1.2.0, react 1.1.1, remark 1.1.1) have registry signatures but no provenance; see [SECURITY.md](SECURITY.md#supply-chain).
 
+**Token fallback.** The first attempt through OIDC (`release-2026-11-20`) failed with `ENEEDAUTH` because the packages had no trusted publisher configured. Until they do, the publish job uses an `NPM_TOKEN` secret when one is set. Store it as an **environment secret on `npm-publish`** (Settings → Environments → npm-publish → Environment secrets), not as a repository secret: a repository secret is readable by any workflow in the repo, while an environment secret is only released to the publish job after the environment's protection rules pass. Remove any repository-level copy. Use a granular token limited to publishing the `@yamblog/*` packages; releases still carry provenance, generated from the job's OIDC token. Once every package has the trusted publisher above, delete the `NPM_TOKEN` secret and revoke the token on npmjs.com.
+
 The OIDC publish path has not yet run end to end. Before the first release through it, confirm that **every** `@yamblog/*` package has the trusted publisher above configured, and prefer making that first release a low-stakes patch (for example a patch of all five packages) rather than a major, so a misconfiguration is cheap to fix.
 
 ## ⚠️ Do not publish locally

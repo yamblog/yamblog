@@ -8,7 +8,8 @@ name: Release
 # package version. Prerequisite: versions must already be applied on main —
 # run `bun run version:packages` and merge that PR first.
 #
-# Publishing uses npm trusted publishing (OIDC) — no long-lived npm token.
+# Publishing uses npm trusted publishing (OIDC). Until every package has a
+# trusted publisher configured, an NPM_TOKEN secret is used as a fallback.
 # Each @yamblog/* package must have this workflow configured as its trusted
 # publisher on npmjs.com (see RELEASING.md). Provenance attestations are
 # generated automatically.
@@ -170,10 +171,28 @@ jobs:
 
       # `changeset publish` publishes every workspace package whose version
       # is not yet on npm, and creates per-package git tags for them.
+      # Fallback while the packages have no trusted publisher configured on
+      # npmjs.com: when the NPM_TOKEN secret is set, npm authenticates with it.
+      # The .npmrc line references the variable, so the token itself is never
+      # written to disk. Provenance is still generated from this job's OIDC
+      # token. Delete the secret once trusted publishing works (RELEASING.md).
+      - name: Configure npm token fallback
+        shell: bash
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          if [[ -n "$NPM_TOKEN" ]]; then
+            echo '//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}' >> "$HOME/.npmrc"
+            echo "Using the NPM_TOKEN secret"
+          else
+            echo "No NPM_TOKEN secret; relying on trusted publishing (OIDC)"
+          fi
+
       - name: Publish to npm
         run: bun run release
         env:
           NPM_CONFIG_PROVENANCE: 'true'
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Push per-package tags
         run: git push origin --tags
