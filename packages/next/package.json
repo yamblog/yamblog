@@ -1,6 +1,6 @@
 {
   "name": "@yamblog/next",
-  "version": "1.2.0",
+  "version": "2.0.0",
   "description": "Next.js adapter for @yamblog/core",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -52,7 +52,7 @@
     "check:dist": "node ./scripts/check-dist.mjs"
   },
   "dependencies": {
-    "@yamblog/core": "^2.0.0",
+    "@yamblog/core": "^2.2.0",
     "react-markdown": "^9.0.0",
     "@vercel/og": "^1.0.3"
   },
