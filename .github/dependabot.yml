@@ -17,11 +17,23 @@ updates:
       # Our own packages are versioned by Changesets — never let Dependabot
       # bump them.
       - dependency-name: '@yamblog/*'
+      # zod 4 changes the peer range of core and astro, which breaks every
+      # current user; it is planned for their next major (see the audit notes
+      # in the 2.2.0 changelog). Remove this entry when that work starts.
+      - dependency-name: zod
+        update-types:
+          - version-update:semver-major
+    # At most two PRs a week for this ecosystem: one with every minor and
+    # patch update, one with every major update. Majors are kept apart so a
+    # breaking upgrade never blocks the routine ones.
     groups:
       minor-and-patch:
         update-types:
           - minor
           - patch
+      major:
+        update-types:
+          - major
     commit-message:
       prefix: chore(deps)
 
@@ -31,10 +43,11 @@ updates:
       interval: weekly
     cooldown:
       default-days: 3
+    # One PR a week with every action update, majors included: actions are
+    # pinned by SHA and exercised by CI on the PR itself.
     groups:
-      minor-and-patch:
-        update-types:
-          - minor
-          - patch
+      actions:
+        patterns:
+          - '*'
     commit-message:
       prefix: ci(deps)
