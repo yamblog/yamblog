@@ -1,0 +1,91 @@
+name: Finalize release
+
+# Run by hand after the staged versions from the Release workflow have been
+# approved on npm. Verifies every package version on the release tag is live
+# on npm, then pushes per-package tags (@yamblog/core@2.2.0, …) and creates
+# the GitHub release. Safe to re-run.
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag that was staged, e.g. release-2026-11-20'
+        required: true
+        type: string
+
+concurrency:
+  group: release-finalize
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  finalize:
+    runs-on: ubuntu-latest
+    permissions:
+      # push per-package tags and create the GitHub release
+      contents: write
+    steps:
+      - name: Validate tag name
+        shell: bash
+        env:
+          TAG: ${{ inputs.tag }}
+        run: |
+          if [[ ! "$TAG" =~ ^(release-[0-9]{4}-[0-9]{2}-[0-9]{2}(\.[0-9]+)?|v[0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
+            echo "::error::'$TAG' is not a release tag (release-YYYY-MM-DD[.N] or vX.Y.Z)."
+            exit 1
+          fi
+
+      - name: Checkout the release tag
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          ref: refs/tags/${{ inputs.tag }}
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
+        with:
+          node-version: 24
+
+      - name: Check every version is live on npm
+        shell: bash
+        run: |
+          missing=0
+          for manifest in packages/*/package.json; do
+            read -r name version private < <(node -e 'const p=require("./"+process.argv[1]);console.log(p.name,p.version,p.private===true)' "$manifest")
+            [[ "$private" == "true" ]] && continue
+            if [[ "$(npm view "$name@$version" version 2>/dev/null)" == "$version" ]]; then
+              echo "$name@$version is on npm"
+            else
+              echo "::error::$name@$version is not on npm yet. Approve the staged version first."
+              missing=$((missing + 1))
+            fi
+          done
+          [[ "$missing" == "0" ]]
+
+      - name: Push per-package tags
+        shell: bash
+        run: |
+          for manifest in packages/*/package.json; do
+            read -r name version private < <(node -e 'const p=require("./"+process.argv[1]);console.log(p.name,p.version,p.private===true)' "$manifest")
+            [[ "$private" == "true" ]] && continue
+            tag="$name@$version"
+            if git rev-parse -q --verify "refs/tags/$tag" >/dev/null; then
+              echo "$tag already exists"
+            else
+              git tag "$tag"
+              git push origin "refs/tags/$tag"
+            fi
+          done
+
+      - name: Create GitHub release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ inputs.tag }}
+        run: |
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release $TAG already exists — skipping"
+          else
+            gh release create "$TAG" --generate-notes --verify-tag
+          fi
