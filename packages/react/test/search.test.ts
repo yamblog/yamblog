@@ -67,3 +67,24 @@ describe('clientSearch', () => {
     expect(tsResults[0].slug).toBe('typescript-tips');
   });
 });
+
+describe('clientSearch with search-index entries (no content)', () => {
+  const entries = [
+    { id: 'blog-ts', slug: 'typescript-tips', title: 'TypeScript Tips', tags: ['typescript'], excerpt: 'Learn TypeScript', author: 'A', date: '2024-01-01', readingTime: 1 },
+    { id: 'blog-astro', slug: 'astro-intro', title: 'Getting Started with Astro', tags: ['astro'], author: 'A', date: '2024-01-01', readingTime: 1 },
+  ];
+
+  it('does not throw and matches on title/excerpt/tags', () => {
+    const results = clientSearch(entries, 'astro');
+    expect(results.map(r => r.slug)).toEqual(['astro-intro']);
+  });
+
+  it('returns the caller\'s own objects', () => {
+    const results = clientSearch(entries, 'typescript');
+    expect(results[0]).toBe(entries[0]);
+  });
+
+  it('returns the same Post objects for full posts', () => {
+    expect(clientSearch(posts, 'react')[0]).toBe(posts[1]);
+  });
+});

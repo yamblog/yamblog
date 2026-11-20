@@ -4,6 +4,7 @@
 
 [![CI](https://github.com/yamblog/yamblog/actions/workflows/ci.yml/badge.svg)](https://github.com/yamblog/yamblog/actions/workflows/ci.yml)
 [![npm](https://img.shields.io/npm/v/%40yamblog%2Fcore?label=%40yamblog%2Fcore)](https://www.npmjs.com/package/@yamblog/core)
+[![downloads](https://img.shields.io/npm/dm/%40yamblog%2Fcore)](https://www.npmjs.com/package/@yamblog/core)
 [![license](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 Drop markdown files in a folder, get a fully typed blog: posts, categories, tags, search, related posts, RSS, sitemap, OG images, JSON-LD, and `llms.txt` — with adapters for Next.js, Astro, and plain React.
@@ -107,6 +108,16 @@ post.videoUrl; // string | undefined — typed automatically, no casts
 
 > **Note:** `.mdx` files are picked up alongside `.md`, but content is rendered as plain markdown — JSX/MDX components are not executed.
 
+## Security and content trust
+
+By default yamblog treats posts like code: whoever can add a markdown file can put HTML on your site.
+
+- **Markdown body.** `MarkdownRenderer` (`@yamblog/react`) and `BlogPostPage` (`@yamblog/next`) use `react-markdown`, which shows raw HTML as text. `toHtml` (`@yamblog/remark`) and the Astro `BlogPostPage` pass raw HTML through unless you opt in with `toHtml(md, { sanitize: true })` or `<BlogPostPage sanitize />`.
+- **JSON-LD.** Never write `JSON.stringify(data)` into a `<script>` tag: a title containing `</script>` breaks out of it. Use the `jsonLd` prop on either `BlogPostPage`, or `serializeJsonLd` from `@yamblog/core`.
+- **Front matter** is YAML or JSON only. Executable `---js` front matter is rejected.
+
+If posts come from a CMS, users, or an AI agent working on untrusted input, read [Security and content trust](docs/security.md). To report a vulnerability, see [SECURITY.md](SECURITY.md).
+
 ## Examples
 
 Runnable apps for each framework live in [`examples/`](examples):
@@ -116,12 +127,14 @@ Runnable apps for each framework live in [`examples/`](examples):
 
 - Website: **[yamblog.dev](https://yamblog.dev)**
 - [Getting started](https://yamblog.dev/getting-started/)
-- [Architecture](docs/architecture.md) · [Extensibility](docs/extensibility.md) · [AI-agent authoring](docs/ai-agent-authoring.md) · [llms.txt](docs/llms-txt.md)
+- [Architecture](docs/architecture.md) · [Extensibility](docs/extensibility.md) · [Security and content trust](docs/security.md) · [AI-agent authoring](docs/ai-agent-authoring.md) · [llms.txt](docs/llms-txt.md)
 - Recipes: [Next.js](docs/recipes/nextjs.md) · [Astro](docs/recipes/astro.md) · [React](docs/recipes/react.md) · [Custom fields](docs/recipes/custom-fields.md)
 
 ## Contributing
 
 Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for local setup and workflow, and [RELEASING.md](RELEASING.md) for how releases are published.
+
+Using YAMBLOG? Add your site to [USERS.md](USERS.md) — it's the only way we learn who relies on it, since the packages have no telemetry.
 
 ## License
 

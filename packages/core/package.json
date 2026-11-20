@@ -1,18 +1,21 @@
 {
   "name": "@yamblog/core",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "Framework-agnostic markdown blog engine",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
     },
     "./search": {
       "types": "./dist/search.d.ts",
-      "import": "./dist/search.js"
-    }
+      "import": "./dist/search.js",
+      "default": "./dist/search.js"
+    },
+    "./package.json": "./package.json"
   },
   "sideEffects": false,
   "type": "module",
@@ -40,7 +43,8 @@
     "yamblog"
   ],
   "files": [
-    "dist"
+    "dist",
+    "src"
   ],
   "publishConfig": {
     "access": "public"

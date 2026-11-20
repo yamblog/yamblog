@@ -1,6 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 import BlogPostPage from '@yamblog/astro/components/BlogPostPage.astro';
+import { buildPostUrl } from '@yamblog/core';
 import { blog } from '../../lib/blog';
 
 export async function getStaticPaths() {
@@ -17,7 +18,8 @@ const jsonLd = {
   '@type': 'Article',
   headline: post.title,
   description: post.excerpt,
-  url: `${blog.siteUrl}/blog/${post.slug}`,
+  // Same URL rule as the RSS feed and sitemap (respects blog.basePath)
+  url: buildPostUrl(blog.siteUrl, blog.basePath, post.slug),
   datePublished: post.date.toISOString(),
   author: { '@type': 'Person', name: post.author },
   keywords: post.tags.join(', '),
@@ -25,5 +27,9 @@ const jsonLd = {
 ---
 
 <Layout title={post.title} description={post.excerpt}>
-  <BlogPostPage post={post} adjacent={adjacent} jsonLd={jsonLd} />
+  <!--
+    BlogPostPage escapes jsonLd itself. The body is rendered with toHtml, which
+    passes raw HTML through; add the `sanitize` prop if authors are not trusted.
+  -->
+  <BlogPostPage post={post} adjacent={adjacent} basePath={blog.basePath} jsonLd={jsonLd} />
 </Layout>

@@ -1,0 +1,14 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "overused-font",
+        "value": "geist",
+        "createdAt": "2026-11-19T19:08:25.628Z",
+        "reason": "agent triage: Geist is the site's existing typeface (already in landing.css and starlight.css at HEAD); this change only moved the same font URL from a CSS @import to head links, no font choice was made"
+      }
+    ]
+  }
+}

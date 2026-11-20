@@ -1,17 +1,22 @@
 {
   "name": "@yamblog/astro",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "Astro adapter for @yamblog/core",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "type": "module",
+  "sideEffects": [
+    "*.astro"
+  ],
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
     },
     "./components/BlogListPage.astro": "./src/components/BlogListPage.astro",
-    "./components/BlogPostPage.astro": "./src/components/BlogPostPage.astro"
+    "./components/BlogPostPage.astro": "./src/components/BlogPostPage.astro",
+    "./package.json": "./package.json"
   },
   "scripts": {
     "build": "tsc",
@@ -20,8 +25,8 @@
     "lint": "eslint src/"
   },
   "dependencies": {
-    "@yamblog/core": "^2.1.0",
-    "@yamblog/remark": "^1.1.1"
+    "@yamblog/core": "^2.2.0",
+    "@yamblog/remark": "^1.2.0"
   },
   "peerDependencies": {
     "astro": ">=4.0.0",
@@ -29,6 +34,7 @@
   },
   "devDependencies": {
     "@types/node": "^25.0.0",
+    "astro": "^7.4.12",
     "typescript": "^6.0.0",
     "zod": "^3.22.4"
   },
@@ -40,7 +46,7 @@
   ],
   "files": [
     "dist",
-    "src/components"
+    "src"
   ],
   "publishConfig": {
     "access": "public"

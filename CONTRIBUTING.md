@@ -41,15 +41,15 @@ The hook only scans staged changes. To scan the whole working tree manually, ins
 | `packages/remark` | Remark/rehype plugins (TOC, embeds, interactive blocks) |
 | `examples/*` | Runnable example apps for each framework |
 | `website/` | The [yamblog.dev](https://yamblog.dev) docs site (Astro Starlight) |
-| `docs/` | Markdown docs: architecture, recipes, AI-agent authoring |
+| `docs/` | Markdown docs: architecture, recipes, security, AI-agent authoring |
 
 ## Common commands
 
 ```bash
 bun run build      # build all packages (also validates example content)
-bun run test       # build, then run all package test suites
+bun run test       # build, then run all package test suites and the scripts tests
 bun run typecheck  # tsc --noEmit across all packages
-bun run lint       # ESLint across all packages
+bun run lint       # ESLint across packages/ (sources and tests) and scripts/
 bun run dev:website  # run the docs site locally
 bun run example:next # run the Next.js example app
 ```

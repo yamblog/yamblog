@@ -1,3 +1,4 @@
+import { formatPostDate } from '../format.js';
 import type { Post } from '@yamblog/core';
 
 export type PostCardProps = {
@@ -7,11 +8,7 @@ export type PostCardProps = {
 };
 
 export function PostCard({ post, basePath = '/blog' }: PostCardProps) {
-  const formattedDate = post.date.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
+  const formattedDate = formatPostDate(post.date);
 
   return (
     <article>

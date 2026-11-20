@@ -6,6 +6,7 @@ import Landing from '../../layouts/Landing.astro';
 import Nav from '../../components/landing/Nav.astro';
 import Footer from '../../components/landing/Footer.astro';
 import AuthorCard from '../../components/landing/AuthorCard.astro';
+import { blogIndexPath, postPath, postUrl } from '../../lib/urls';
 
 export async function getStaticPaths() {
   const posts = await blog.getPosts();
@@ -38,7 +39,7 @@ const jsonLd = {
     ...(post.authorWebpage && { url: post.authorWebpage }),
   },
   keywords: post.tags.join(', '),
-  url: `${blog.siteUrl}/blog/${post.slug}/`,
+  url: postUrl(blog.siteUrl, post.slug),
 };
 ---
 
@@ -54,7 +55,7 @@ const jsonLd = {
   <main class="blog-post">
     <div class="container">
       <div class="blog-post-shell">
-        <a class="blog-post-back" href="/blog">← Back to blog</a>
+        <a class="blog-post-back" href={blogIndexPath()}>← Back to blog</a>
 
         <header class="blog-post-header">
           <p class="blog-kicker">Blog post</p>
@@ -78,7 +79,7 @@ const jsonLd = {
         {(adjacent.prev || adjacent.next) && (
           <nav class="blog-post-nav" aria-label="Post navigation">
             {adjacent.prev ? (
-              <a href={`/blog/${adjacent.prev.slug}`}>
+              <a href={postPath(adjacent.prev.slug)}>
                 <span class="blog-post-nav-label">Previous</span>
                 <span class="blog-post-nav-title">← {adjacent.prev.title}</span>
               </a>
@@ -87,7 +88,7 @@ const jsonLd = {
             )}
 
             {adjacent.next ? (
-              <a class="next-link" href={`/blog/${adjacent.next.slug}`}>
+              <a class="next-link" href={postPath(adjacent.next.slug)}>
                 <span class="blog-post-nav-label">Next</span>
                 <span class="blog-post-nav-title">{adjacent.next.title} →</span>
               </a>

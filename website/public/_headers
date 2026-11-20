@@ -1,0 +1,36 @@
+# Cloudflare static asset headers for yamblog.dev.
+# The Cloudflare adapter appends its own /_astro/* cache rule to this file.
+#
+# Content-Security-Policy is enforced only for the directives that cannot
+# break the page (framing, plugins, <base>, form targets). The full policy
+# runs as Content-Security-Policy-Report-Only for now: Starlight, Pagefind and
+# the theme bootstrap use inline scripts, which this policy does not yet allow
+# by hash. Once the reports are clean, promote it to Content-Security-Policy.
+#
+# https://r.bnap.dev is the Rybbit analytics host (script and event API).
+# fonts.googleapis.com / fonts.gstatic.com serve the web fonts (src/lib/fonts.ts).
+# The frame-src hosts are the players @yamblog/remark's remarkEmbed produces.
+# 'wasm-unsafe-eval' is required by Pagefind's WebAssembly search.
+
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Frame-Options: DENY
+  Permissions-Policy: accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=(), interest-cohort=()
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+  Content-Security-Policy: frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self'
+  Content-Security-Policy-Report-Only: default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://r.bnap.dev; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://r.bnap.dev; frame-src https://www.youtube.com https://www.youtube-nocookie.com https://player.vimeo.com https://codepen.io; worker-src 'self' blob:; manifest-src 'self'; frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self'
+
+# These routes are prerendered, so headers set in their route handlers are
+# dropped; set their caching here instead.
+/feed.xml
+  Cache-Control: public, max-age=3600, stale-while-revalidate=86400
+
+/llms.txt
+  Cache-Control: public, max-age=3600, stale-while-revalidate=86400
+
+/sitemap-index.xml
+  Cache-Control: public, max-age=3600, stale-while-revalidate=86400
+
+/sitemap-0.xml
+  Cache-Control: public, max-age=3600, stale-while-revalidate=86400

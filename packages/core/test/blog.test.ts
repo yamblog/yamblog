@@ -106,7 +106,11 @@ describe('createBlog', () => {
     const blog2 = createBlog({ contentDir });
     const a = await blog2.getPosts();
     const b = await blog2.getPosts();
-    expect(a).toBe(b);
+    // Same cached post objects, in a fresh array per call (so callers can
+    // sort/reverse the result without corrupting the cache)
+    expect(a).not.toBe(b);
+    expect(a).toEqual(b);
+    a.forEach((post, i) => expect(post).toBe(b[i]!));
   });
 
   it('findPostBySlug returns the post or null', async () => {
@@ -188,8 +192,11 @@ describe('createBlog sync API', () => {
     expect(posts.every(p => !p.draft)).toBe(true);
   });
 
-  it('sync and async variants return the same cached array', async () => {
-    expect(await blog.getPosts()).toBe(blog.getPostsSync());
+  it('sync and async variants return the same cached posts', async () => {
+    const asyncPosts = await blog.getPosts();
+    const syncPosts = blog.getPostsSync();
+    expect(asyncPosts).toEqual(syncPosts);
+    asyncPosts.forEach((post, i) => expect(post).toBe(syncPosts[i]!));
   });
 
   it('getPostBySlugSync returns the post or throws PostNotFoundError', () => {
@@ -244,12 +251,17 @@ describe('createBlog dev-mode cache', () => {
       const b = createBlog({ contentDir: dir });
       const first = await b.getPosts();
       expect(first.length).toBe(1);
-      // Unchanged content — same cached array instance
-      expect(await b.getPosts()).toBe(first);
+      // Unchanged content — same cached post objects (getPosts returns a
+      // fresh array each call so callers cannot mutate the cache)
+      const again = await b.getPosts();
+      expect(again).not.toBe(first);
+      expect(again[0]).toBe(first[0]);
 
       writeFileSync(join(dir, 'b.md'), post('B'));
       // Ensure the new file's mtime is distinguishable
       utimesSync(join(dir, 'b.md'), new Date(), new Date(Date.now() + 1000));
+      // The directory check is reused for a short window (100 ms)
+      await new Promise(resolve => setTimeout(resolve, 150));
       const second = await b.getPosts();
       expect(second.length).toBe(2);
     } finally {

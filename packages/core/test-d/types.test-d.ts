@@ -5,7 +5,7 @@
  * with zero casts, and that the default schema still works with no generic.
  */
 import { z } from 'zod';
-import { defineBlog, createBlog, defaultSchema, PostNotFoundError, validateContent, validateContentSync } from '../src/index.js';
+import { defineBlog, createBlog, defaultSchema, PostNotFoundError, validateContent, validateContentSync, serializeJsonLd } from '../src/index.js';
 import type { Post, Blog, AdjacentPosts } from '../src/index.js';
 
 type Equal<X, Y> = (<T>() => T extends X ? 1 : 2) extends <T>() => T extends Y ? 1 : 2 ? true : false;
@@ -123,3 +123,16 @@ void validateHelpers;
 void defaultSchemaFields;
 void nullability;
 void errorNarrowing;
+
+// ---------------------------------------------------------------------------
+// llms.txt filter is typed against the blog's schema
+// ---------------------------------------------------------------------------
+projects.generateLlmsTxtSync({ filter: p => p.company === 'acme' });
+void projects.generateLlmsTxt({ filter: p => p.technologies.includes('ts') });
+// The default-schema form keeps compiling with no type argument
+const _defaultLlmsOptions: import('../src/index.js').LlmsTxtOptions = { filter: p => p.featured };
+// @ts-expect-error — not a field of the default schema
+defineBlog().generateLlmsTxtSync({ filter: p => p.company === 'x' });
+
+// serializeJsonLd returns a string
+expectType<string>(serializeJsonLd({ '@type': 'BlogPosting' }));

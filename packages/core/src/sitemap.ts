@@ -1,4 +1,5 @@
-import { buildPostUrl } from './utils.js';
+import { buildPostUrl, escapeXml, warnIfRelativeSiteUrl } from './utils.js';
+import { assertPostsHaveField } from './guards.js';
 import type { Post, SitemapOptions } from './types.js';
 
 /**
@@ -7,15 +8,17 @@ import type { Post, SitemapOptions } from './types.js';
  * Draft posts are excluded unless `includeDrafts: true` is passed explicitly.
  */
 export function generateSitemap(posts: Post[], options: SitemapOptions & { siteUrl: string }): string {
-  const { siteUrl } = options;
+  const siteUrl = options.siteUrl ?? '';
   const published = options.includeDrafts ? posts : posts.filter(post => !post.draft);
+  warnIfRelativeSiteUrl(siteUrl, 'generateSitemap');
+  assertPostsHaveField(published, 'date', 'generateSitemap()');
 
   const urls = published
     .map(post => {
       const url = buildPostUrl(siteUrl, options.basePath, post.slug);
       const lastmod = post.date.toISOString().split('T')[0]; // YYYY-MM-DD
       return `  <url>
-    <loc>${url}</loc>
+    <loc>${escapeXml(url)}</loc>
     <lastmod>${lastmod}</lastmod>
   </url>`;
     })

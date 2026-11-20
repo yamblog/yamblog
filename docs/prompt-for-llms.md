@@ -56,7 +56,7 @@ You are integrating YAMBlog (https://github.com/yamblog/yamblog) into an existin
 
    Welcome to my blog, powered by **Yamblog**.
 
-5. Wire the minimal routes (a listing page calling blog.getPosts() and a post page calling blog.getPostBySlug(slug)) using the adapter's documented exports. If an import fails, read the installed package or https://yamblog.dev/getting-started/ and correct it — do not guess names.
+5. Wire the minimal routes (a listing page calling blog.getPosts() and a post page calling blog.findPostBySlug(slug) and returning a 404 when it is null) using the adapter's documented exports. If an import fails, read the installed package or https://yamblog.dev/getting-started/ and correct it — do not guess names.
 
 6. Verify before declaring success:
    - `await blog.validateContent()` passes — it throws on invalid frontmatter, a missing content directory, or duplicate slugs

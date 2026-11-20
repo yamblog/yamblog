@@ -14,3 +14,4 @@ export { PostLayout } from './components/PostLayout.js';
 export type { PostLayoutProps } from './components/PostLayout.js';
 
 export { clientSearch } from './search.js';
+export type { SearchablePost } from './search.js';

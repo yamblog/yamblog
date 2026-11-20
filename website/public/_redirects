@@ -1,0 +1,4 @@
+# The hand-written /sitemap.xml was replaced by the sitemap Starlight
+# generates (/sitemap-index.xml). Keep the old URL working for crawlers and
+# search consoles that already know it.
+/sitemap.xml /sitemap-index.xml 301

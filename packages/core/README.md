@@ -1,5 +1,7 @@
 # @yamblog/core
 
+[![npm](https://img.shields.io/npm/v/%40yamblog%2Fcore)](https://www.npmjs.com/package/@yamblog/core) [![downloads](https://img.shields.io/npm/dm/%40yamblog%2Fcore)](https://www.npmjs.com/package/@yamblog/core)
+
 Framework-agnostic markdown blog engine. File-based, type-safe, zero-config.
 
 ## Install
@@ -87,7 +89,16 @@ Posts are loaded once and cached per blog instance. In development
 changes, so edits show up without restarting the dev server.
 
 Slugs are derived from filenames and sanitized into a URL-safe form:
-`My Post.md` → `my-post`. Pass a custom `slugify` to change this.
+`My Post.md` → `my-post`. Filenames with no ASCII letters or digits keep their
+Unicode letters (`日本語.md` → `日本語`). Pass a custom `slugify` to change this.
+
+`siteUrl` should be an absolute `https://…` URL: RSS readers and search engines
+need absolute links, so `generateRss`/`generateSitemap` log a one-time warning
+when it is missing. `defineBlog()` detects it from `SITE`, `PUBLIC_SITE_URL`,
+`NEXT_PUBLIC_SITE_URL` or `NEXT_PUBLIC_BASE_URL`; on Vercel it falls back to
+`VERCEL_PROJECT_PRODUCTION_URL` for production deployments
+(`VERCEL_ENV=production`) and to the per-deployment `VERCEL_URL` otherwise.
+Set one of the explicit variables for a custom domain.
 
 > **Note:** `.mdx` files are picked up alongside `.md`, but content is treated
 > as plain markdown — JSX/MDX components are not executed.
@@ -116,7 +127,7 @@ await blog.validateContent();
 Both forms throw when:
 
 - the content directory does not exist
-- a markdown file has invalid frontmatter
+- a markdown file has invalid frontmatter (the error names the file)
 - two files resolve to the same slug
 
 ## Frontmatter schema
@@ -135,7 +146,12 @@ draft: false
 ---
 ```
 
-Required fields: `title`, `date`. Everything else is optional.
+Required fields: `title`, `date`. Everything else is optional. An empty
+`date:` or a boolean is rejected rather than read as 1970.
+
+Front matter must be YAML (`---`) or JSON (`---json`). Executable front matter
+(`---js` / `---javascript`) is rejected and never evaluated, so markdown from
+a CMS or other untrusted source cannot run code during a build.
 Do not put `slug` in frontmatter — it is derived from the filename.
 Computed fields added automatically: `id` (`"blog-{slug}"`), `slug`, `readingTime`, `content`.
 
@@ -165,6 +181,12 @@ p.technologies; // string[]
 p.readingTime;  // number — engine fields still present
 ```
 
+Extend `defaultSchema` to keep the fields the built-in sort, search, tags,
+related posts, RSS and sitemap rely on (`title`, `date`, `tags`). A fully
+custom schema works for slug-based lookups (with a custom `sortBy`); methods
+that need a missing field throw an error naming it. If your schema does not
+declare `draft`, a literal `draft: true` in a post still marks it as a draft.
+
 ## API
 
 | Method | Returns |
@@ -189,8 +211,13 @@ p.readingTime;  // number — engine fields still present
 Every method above also exists as a `…Sync` variant with the same signature
 minus the `Promise` (e.g. `getPostsSync()`, `generateRssSync(options)`).
 
+Query methods return a fresh array on every call, so sorting or reversing the
+result in place does not affect later calls.
+
 The package root also exports standalone helpers: `searchPosts`, `defaultSlugify`,
-`buildPostUrl`, `normalizeBasePath`, `normalizeSiteUrl`, and `DEFAULT_BASE_PATH`.
+`buildPostUrl`, `normalizeBasePath`, `normalizeSiteUrl`, `DEFAULT_BASE_PATH`, and
+`serializeJsonLd` (JSON with `<`, `>`, `&`, U+2028 and U+2029 escaped, safe to
+place inside `<script type="application/ld+json">`).
 
 ## Browser-safe search
 

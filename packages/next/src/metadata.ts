@@ -1,4 +1,4 @@
-import { buildPostUrl } from '@yamblog/core';
+import { buildPostUrl, normalizeSiteUrl } from '@yamblog/core';
 import type { Post } from '@yamblog/core';
 
 type BreadcrumbItem = {
@@ -6,8 +6,23 @@ type BreadcrumbItem = {
   url: string;
 };
 
-type MetadataOptions = {
-  siteUrl: string;
+/** An image for `openGraph.images` / `twitter.images`. */
+export type PostMetadataImage =
+  | string
+  | {
+      url: string;
+      width?: number;
+      height?: number;
+      alt?: string;
+    };
+
+export type MetadataOptions = {
+  /**
+   * Absolute origin of the site, e.g. `https://example.com`. Used to build the
+   * canonical URL. When omitted, URLs are root-relative (`/blog/my-post`) and
+   * Next.js resolves them against `metadataBase` from your root layout.
+   */
+  siteUrl?: string;
   siteName?: string;
   /**
    * URL path prefix where the blog is mounted. Pass `blog.basePath` when the
@@ -15,17 +30,56 @@ type MetadataOptions = {
    * match the RSS/sitemap links. Default: '/blog'
    */
   basePath?: string;
+  /**
+   * Opt-in: social preview image(s) for `openGraph.images` and
+   * `twitter.images`, e.g. the URL of a `createOgImageHandler` route
+   * (`/blog/${post.slug}/opengraph-image`). Root-relative paths are resolved
+   * against `siteUrl` when it is set. Default: no images (unchanged output).
+   */
+  ogImage?: PostMetadataImage | PostMetadataImage[];
+  /**
+   * Opt-in: use the post's `coverImage` frontmatter as the social image when
+   * `ogImage` is not given. Default: false.
+   */
+  useCoverImage?: boolean;
 };
+
+type ResolvedImage = { url: string; width?: number; height?: number; alt?: string };
+
+function resolveUrl(siteUrl: string | undefined, url: string): string {
+  if (siteUrl && url.startsWith('/') && !url.startsWith('//')) {
+    return `${normalizeSiteUrl(siteUrl)}${url}`;
+  }
+  return url;
+}
+
+function resolveImages(
+  post: Post,
+  { siteUrl, ogImage, useCoverImage }: MetadataOptions,
+): ResolvedImage[] | undefined {
+  const source = ogImage ?? (useCoverImage && post.coverImage ? post.coverImage : undefined);
+  if (source === undefined) return undefined;
+  const list = Array.isArray(source) ? source : [source];
+  if (list.length === 0) return undefined;
+  return list.map(image => {
+    const resolved: ResolvedImage = typeof image === 'string' ? { url: image } : { ...image };
+    resolved.url = resolveUrl(siteUrl, resolved.url);
+    if (resolved.alt === undefined) resolved.alt = post.title;
+    return resolved;
+  });
+}
 
 /**
  * Generates a Next.js Metadata object for a blog post.
  */
 export function generatePostMetadata(
   post: Post,
-  { siteUrl, siteName, basePath }: MetadataOptions,
+  options: MetadataOptions = {},
 ) {
-  const url = buildPostUrl(siteUrl, basePath, post.slug);
+  const { siteUrl, siteName, basePath } = options;
+  const url = buildPostUrl(siteUrl ?? '', basePath, post.slug);
   const description = post.excerpt ?? post.title;
+  const images = resolveImages(post, options);
 
   return {
     title: post.title,
@@ -41,11 +95,13 @@ export function generatePostMetadata(
       publishedTime: post.date.toISOString(),
       authors: [post.author],
       siteName,
+      ...(images ? { images } : {}),
     },
     twitter: {
       card: 'summary_large_image',
       title: post.title,
       description,
+      ...(images ? { images } : {}),
     },
   };
 }
@@ -78,14 +134,14 @@ export function generateBreadcrumbJsonLd(items: BreadcrumbItem[]) {
  */
 export function generateBlogJsonLd(
   post: Post,
-  { siteUrl, basePath }: MetadataOptions,
+  { siteUrl, basePath }: MetadataOptions = {},
 ) {
   return {
     '@context': 'https://schema.org',
     '@type': 'Article',
     headline: post.title,
     description: post.excerpt,
-    url: buildPostUrl(siteUrl, basePath, post.slug),
+    url: buildPostUrl(siteUrl ?? '', basePath, post.slug),
     datePublished: post.date.toISOString(),
     author: {
       '@type': 'Person',

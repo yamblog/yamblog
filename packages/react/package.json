@@ -1,6 +1,6 @@
 {
   "name": "@yamblog/react",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "description": "React adapter for @yamblog/core",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -8,17 +8,20 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
-    }
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
   },
+  "sideEffects": false,
   "scripts": {
-    "build": "tsc",
+    "build": "rm -rf ./dist && tsc",
     "test": "bun test",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src/"
   },
   "dependencies": {
-    "@yamblog/core": "^2.0.0",
+    "@yamblog/core": "^2.2.0",
     "react-markdown": "^9.0.0"
   },
   "peerDependencies": {
@@ -27,7 +30,9 @@
   "devDependencies": {
     "@types/react": "^18.0.0",
     "@types/node": "^25.0.0",
-    "typescript": "^6.0.0"
+    "typescript": "^6.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   },
   "keywords": [
     "react",

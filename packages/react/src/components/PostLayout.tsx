@@ -1,3 +1,4 @@
+import { formatPostDate } from '../format.js';
 import type { Post, AdjacentPosts } from '@yamblog/core';
 
 export type PostLayoutProps = {
@@ -10,11 +11,7 @@ export type PostLayoutProps = {
 };
 
 export function PostLayout({ post, children, adjacent, basePath = '/blog' }: PostLayoutProps) {
-  const formattedDate = post.date.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
+  const formattedDate = formatPostDate(post.date);
 
   return (
     <main>

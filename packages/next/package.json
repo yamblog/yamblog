@@ -1,6 +1,6 @@
 {
   "name": "@yamblog/next",
-  "version": "1.2.0",
+  "version": "2.0.0",
   "description": "Next.js adapter for @yamblog/core",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -8,17 +8,51 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
-    }
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./components": {
+      "types": "./dist/components/index.d.ts",
+      "import": "./dist/components/index.js",
+      "default": "./dist/components/index.js"
+    },
+    "./metadata": {
+      "types": "./dist/metadata.d.ts",
+      "import": "./dist/metadata.js",
+      "default": "./dist/metadata.js"
+    },
+    "./og": {
+      "types": "./dist/og.d.ts",
+      "import": "./dist/og.js",
+      "default": "./dist/og.js"
+    },
+    "./rss": {
+      "types": "./dist/rss.d.ts",
+      "import": "./dist/rss.js",
+      "default": "./dist/rss.js"
+    },
+    "./sitemap": {
+      "types": "./dist/sitemap.d.ts",
+      "import": "./dist/sitemap.js",
+      "default": "./dist/sitemap.js"
+    },
+    "./params": {
+      "types": "./dist/params.d.ts",
+      "import": "./dist/params.js",
+      "default": "./dist/params.js"
+    },
+    "./package.json": "./package.json"
   },
+  "sideEffects": false,
   "scripts": {
-    "build": "rm -rf ./dist && bun build ./src/index.ts --outdir ./dist --target node --external @vercel/og && tsc -p tsconfig.json --emitDeclarationOnly",
+    "build": "rm -rf ./dist && tsc -p tsconfig.json && node ./scripts/check-dist.mjs",
     "test": "bun test",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint src/"
+    "lint": "eslint src/",
+    "check:dist": "node ./scripts/check-dist.mjs"
   },
   "dependencies": {
-    "@yamblog/core": "^2.0.0",
+    "@yamblog/core": "^2.2.0",
     "react-markdown": "^9.0.0",
     "@vercel/og": "^1.0.3"
   },
@@ -33,7 +67,10 @@
   "devDependencies": {
     "@types/react": "^18.0.0",
     "@types/node": "^25.0.0",
-    "typescript": "^6.0.0"
+    "typescript": "^6.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "next": "^16.4.6"
   },
   "keywords": [
     "nextjs",

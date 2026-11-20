@@ -1,6 +1,6 @@
 {
   "name": "yamblog",
-  "private": false,
+  "private": true,
   "version": "0.0.0",
   "packageManager": "bun@1.3.13",
   "workspaces": [
@@ -10,12 +10,14 @@
   ],
   "scripts": {
     "validate:content": "bun run scripts/validate-content.ts",
-    "build": "bun run validate:content && bun run --filter './packages/*' build",
+    "build": "bun run validate:content && node scripts/build-changed.mjs --all --packages",
     "build:changed": "bun run validate:content && node scripts/build-changed.mjs",
-    "test": "bun run build && bun run test:packages",
+    "test": "bun run build && bun run test:packages && bun run test:scripts",
     "test:packages": "bun run --filter './packages/*' test",
+    "test:scripts": "bun test ./scripts",
+    "smoke:pack": "node scripts/pack-smoke.mjs",
     "typecheck": "bun run --filter './packages/*' typecheck",
-    "lint": "eslint packages/*/src/",
+    "lint": "eslint packages scripts",
     "dev:website": "bun run --filter website dev",
     "example:next": "bun run --filter with-next dev",
     "changeset": "changeset",

@@ -1,11 +1,50 @@
 import { readdirSync, readFileSync, statSync } from 'fs';
+import type { Dirent } from 'fs';
 import { join } from 'path';
 import { z } from 'zod';
-import { parsePost } from './parser.js';
+import { parsePost, errorWithCause } from './parser.js';
+import { assertPostsHaveField, missingFieldError } from './guards.js';
 import { defaultSlugify } from './utils.js';
 import { PostNotFoundError } from './errors.js';
 import type { Post, BlogConfig, AdjacentPosts } from './types.js';
 import { defaultSchema } from './types.js';
+
+const MARKDOWN_FILE = /\.mdx?$/;
+
+/**
+ * Lists the markdown files in contentDir: entries named *.md / *.mdx that are
+ * files, or symlinks to files. Directories that happen to end in .md are
+ * skipped instead of crashing every read with EISDIR.
+ */
+function listMarkdownFiles(contentDir: string): string[] {
+  return readdirSync(contentDir, { withFileTypes: true })
+    .filter((entry: Dirent) => {
+      if (!MARKDOWN_FILE.test(entry.name)) return false;
+      if (entry.isFile()) return true;
+      if (entry.isSymbolicLink()) {
+        try {
+          return statSync(join(contentDir, entry.name)).isFile();
+        } catch {
+          // Broken link: keep it so the read error names the file
+          return true;
+        }
+      }
+      return false;
+    })
+    .map((entry: Dirent) => entry.name);
+}
+
+const DEFAULT_SORT_HINT = 'pass a custom sortBy';
+
+function defaultSort(a: { date?: unknown; slug?: unknown }, b: { date?: unknown; slug?: unknown }): number {
+  for (const post of [a, b]) {
+    const d = post.date as Date | undefined;
+    if (!d || typeof d !== 'object' || typeof d.getTime !== 'function') {
+      throw missingFieldError('date', 'the default post sort', post.slug, DEFAULT_SORT_HINT);
+    }
+  }
+  return (b.date as Date).getTime() - (a.date as Date).getTime();
+}
 
 /**
  * Reads all .md files from contentDir, parses them, and sorts.
@@ -19,12 +58,12 @@ export function loadAllPostsSync<TSchema extends z.ZodObject<z.ZodRawShape> = ty
 ): Post<TSchema>[] {
   const { contentDir } = config;
   const slugify = config.slugify ?? defaultSlugify;
-  const sortBy = config.sortBy ?? ((a, b) => (b.date as Date).getTime() - (a.date as Date).getTime());
+  const sortBy = config.sortBy ?? defaultSort;
   const schema = config.schema;
 
   let files: string[];
   try {
-    files = readdirSync(contentDir).filter((f: string) => /\.mdx?$/.test(f));
+    files = listMarkdownFiles(contentDir);
   } catch (err: unknown) {
     if ((err as NodeJS.ErrnoException).code === 'ENOENT') {
       throw new Error(`yamblog: content directory not found: "${contentDir}"`);
@@ -39,8 +78,14 @@ export function loadAllPostsSync<TSchema extends z.ZodObject<z.ZodRawShape> = ty
         `yamblog: filename "${filename}" produced an empty slug — rename the file to include URL-safe characters, or pass a custom slugify()`,
       );
     }
-    const raw = readFileSync(join(contentDir, filename), 'utf-8');
-    return parsePost(raw, slug, schema);
+    let raw: string;
+    try {
+      raw = readFileSync(join(contentDir, filename), 'utf-8');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      throw errorWithCause(`yamblog: failed to read "${filename}": ${message}`, err);
+    }
+    return parsePost(raw, slug, schema, filename);
   });
 
   const seenSlugs = new Set<string>();
@@ -66,8 +111,7 @@ export async function loadAllPosts<TSchema extends z.ZodObject<z.ZodRawShape> = 
  */
 export function contentSignature(contentDir: string): string {
   try {
-    return readdirSync(contentDir)
-      .filter((f: string) => /\.mdx?$/.test(f))
+    return listMarkdownFiles(contentDir)
       .map((f: string) => `${f}:${statSync(join(contentDir, f)).mtimeMs}`)
       .join('|');
   } catch {
@@ -117,6 +161,7 @@ export function getPostsByTag<TSchema extends z.ZodObject<z.ZodRawShape> = typeo
   posts: Post<TSchema>[],
   tag: string,
 ): Post<TSchema>[] {
+  assertPostsHaveField(posts, 'tags', 'getPostsByTag()');
   return posts.filter(p => (p as Post).tags.includes(tag));
 }
 

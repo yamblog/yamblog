@@ -136,14 +136,50 @@ function PostPageRoute() {
 
 ## 6. remark plugins (optional)
 
+```bash
+npm install @yamblog/remark
+```
+
 ```tsx
-import { MarkdownRenderer } from '@yamblog/react';
+import { MarkdownRenderer, type MarkdownRendererProps } from '@yamblog/react';
 import { remarkToc, remarkEmbed } from '@yamblog/remark';
 
-<MarkdownRenderer
-  content={post.content}
-  remarkPlugins={[remarkToc, remarkEmbed]}
-/>
+// Define plugin lists once, outside the component, so they keep the same identity
+const remarkPlugins: MarkdownRendererProps['remarkPlugins'] = [
+  remarkEmbed,
+  [remarkToc, { ids: true }],
+];
+
+<MarkdownRenderer content={post.content} remarkPlugins={remarkPlugins} />
+```
+
+- `remarkEmbed` turns bare YouTube, Vimeo and CodePen URLs into real `<iframe>`
+  elements. They render in `MarkdownRenderer` as-is; you do **not** need `rehype-raw`.
+- `[remarkToc, { ids: true }]` replaces a `## Table of Contents` heading with a list
+  of links and gives each heading a matching `id`, so the links work.
+
+`MarkdownRenderer` is built on `react-markdown`, which is safe by default: raw HTML
+in a post is shown as text and `javascript:` links are removed. Adding `rehype-raw`
+turns raw HTML back on, so only do that when every author is trusted, or pair it with
+`rehype-sanitize`. See [Security and content trust](../security.md).
+
+### Searching a search index instead of full posts
+
+Shipping every post body to the browser is heavy for large blogs. `useBlog` and
+`clientSearch` also accept the smaller entries from `blog.generateSearchIndex()`
+(no `content` field); results are your own objects:
+
+```ts
+// scripts/generate-posts.mjs (addition)
+mkdirSync('src/generated', { recursive: true });
+writeFileSync('src/generated/search-index.json', JSON.stringify(await blog.generateSearchIndex()));
+```
+
+```tsx
+import { useBlog } from '@yamblog/react';
+import index from '../generated/search-index.json';
+
+const { posts: results, query, setQuery } = useBlog(index);
 ```
 
 ## File layout

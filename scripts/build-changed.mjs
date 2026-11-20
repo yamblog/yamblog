@@ -1,21 +1,29 @@
 import { spawnSync } from 'node:child_process';
 import {
-  collectAffectedWorkspaces,
-  getChangedFiles,
   getWorkspaces,
-  resolveDefaultSinceRef,
   resolveRootDir,
+  selectWorkspacesToBuild,
   sortWorkspacesTopologically,
 } from './workspace-graph.mjs';
 
 function parseArgs(argv) {
-  const args = { all: false, since: null, head: 'HEAD' };
+  const args = { all: false, since: null, head: 'HEAD', dryRun: false, packagesOnly: false };
 
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
 
     if (arg === '--all') {
       args.all = true;
+      continue;
+    }
+
+    if (arg === '--packages') {
+      args.packagesOnly = true;
+      continue;
+    }
+
+    if (arg === '--dry-run') {
+      args.dryRun = true;
       continue;
     }
 
@@ -83,19 +91,30 @@ function withInternalDependencies(allWorkspaces, selectedWorkspaces) {
 
 const rootDir = resolveRootDir();
 const args = parseArgs(process.argv.slice(2));
-const workspaces = getWorkspaces(rootDir).filter((workspace) => workspace.hasBuildScript);
+// --packages limits the build to the published packages under packages/
+// (still in dependency order, unlike a parallel `bun run --filter`).
+const workspaces = getWorkspaces(rootDir).filter(
+  (workspace) =>
+    workspace.hasBuildScript && (!args.packagesOnly || workspace.relDir.startsWith('packages/')),
+);
 
 let selected = workspaces;
 
 if (!args.all) {
-  const sinceRef = args.since ?? resolveDefaultSinceRef(rootDir);
+  const selection = selectWorkspacesToBuild(rootDir, workspaces, {
+    since: args.since,
+    head: args.head,
+  });
+  const { sinceRef } = selection;
+  selected = selection.selected;
 
-  if (!sinceRef) {
+  if (selection.reason === 'no-baseline') {
     console.log('No baseline ref found. Building all workspaces.');
+  } else if (selection.reason === 'missing-ref') {
+    console.log(`Baseline ref ${sinceRef} is not in this clone (force-push?). Building all workspaces.`);
+  } else if (selection.reason === 'no-merge-base') {
+    console.log(`No merge base between ${sinceRef} and ${args.head}. Building all workspaces.`);
   } else {
-    const changedFiles = getChangedFiles(rootDir, sinceRef, args.head);
-    selected = collectAffectedWorkspaces(workspaces, changedFiles);
-
     if (selected.length === 0) {
       console.log(`No buildable workspace changes detected since ${sinceRef}.`);
       process.exit(0);
@@ -117,5 +136,7 @@ const ordered = sortWorkspacesTopologically(selected);
 
 for (const workspace of ordered) {
   console.log(`\n> Building ${workspace.name}`);
-  runBuild(rootDir, workspace);
+  if (!args.dryRun) {
+    runBuild(rootDir, workspace);
+  }
 }

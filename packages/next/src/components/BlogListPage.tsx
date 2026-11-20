@@ -1,7 +1,9 @@
-import Link from 'next/link';
+// See BlogPostPage.tsx for why the specifier is fully specified.
+import Link from 'next/link.js';
 import type { Post } from '@yamblog/core';
+import { formatPostDate } from './format.js';
 
-interface Props {
+export interface BlogListPageProps {
   posts: Post[];
   /** Current search query — controls result count label and Clear button */
   query?: string;
@@ -9,7 +11,7 @@ interface Props {
   basePath?: string;
 }
 
-export function BlogListPage({ posts, query, basePath = '/blog' }: Props) {
+export function BlogListPage({ posts, query, basePath = '/blog' }: BlogListPageProps) {
   return (
     <main className="max-w-2xl mx-auto px-4 py-16">
       <h1 className="text-3xl font-bold mb-6">Blog</h1>
@@ -56,11 +58,7 @@ export function BlogListPage({ posts, query, basePath = '/blog' }: Props) {
               </h2>
             </Link>
             <p className="text-sm text-zinc-500 mt-1">
-              {post.date.toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-              })}
+              {formatPostDate(post.date)}
               {' \u00b7 '}{post.readingTime} min read{' \u00b7 '}{post.author}
             </p>
             {post.excerpt && (

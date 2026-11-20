@@ -42,15 +42,19 @@ const tab2: Line[] = [
 const tab3: Line[] = [
   line(`${c('// app/blog/[slug]/page.tsx')}`),
   line(`${k('import')} { ${f('BlogPostPage')}, ${f('generatePostMetadata')} } ${k('from')} ${s("'@yamblog/next'")};`, true),
+  line(`${k('import')} { ${f('notFound')} } ${k('from')} ${s("'next/navigation'")};`),
   line(`${k('import')} { blog } ${k('from')} ${s("'@/lib/blog'")};`),
   empty(),
   line(`${k('export async function')} ${f('generateMetadata')}({ params }) {`),
-  line(`  ${k('const')} post = ${k('await')} blog.${f('getPostBySlug')}(params.slug);`),
-  line(`  ${k('return')} ${f('generatePostMetadata')}(post, { siteName: ${s("'My Blog'")} });`),
+  line(`  ${k('const')} { slug } = ${k('await')} params;`),
+  line(`  ${k('const')} post = ${k('await')} blog.${f('findPostBySlug')}(slug);`),
+  line(`  ${k('if')} (!post) ${k('return')} {};`),
+  line(`  ${k('return')} ${f('generatePostMetadata')}(post, { siteUrl: blog.siteUrl, siteName: ${s("'My Blog'")} });`),
   line(`}`),
   empty(),
   line(`${c('// app/feed.xml/route.ts')}`),
-  line(`${k('export const')} GET = ${f('createRssHandler')}(blog, { title: ${s("'My Blog'")} });`, true),
+  line(`${k('import')} { ${f('createRssHandler')} } ${k('from')} ${s("'@yamblog/next'")};`),
+  line(`${k('export const')} GET = ${f('createRssHandler')}(blog, { title: ${s("'My Blog'")}, description: ${s("'Latest posts'")} });`, true),
 ];
 
 const tabs = [

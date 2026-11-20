@@ -10,6 +10,10 @@ type OgImageOptions = {
   render?: (post: Awaited<ReturnType<Blog['getPostBySlug']>>) => React.ReactElement;
 };
 
+function isPostNotFound(err: unknown): boolean {
+  return err instanceof Error && err.name === 'PostNotFoundError';
+}
+
 /**
  * Creates a Next.js route handler that generates OG images for blog posts.
  *
@@ -18,6 +22,11 @@ type OgImageOptions = {
  * import { createOgImageHandler } from '@yamblog/next';
  * import { blog } from '@/lib/blog';
  * export const GET = createOgImageHandler(blog, { siteName: 'My Blog' });
+ *
+ * // Reference it from the page metadata so it is actually used:
+ * // generatePostMetadata(post, { siteUrl, ogImage: `/blog/${post.slug}/opengraph-image` })
+ *
+ * An unknown slug returns a plain `404 Not found` response.
  */
 export function createOgImageHandler(blog: Blog, options: OgImageOptions = {}) {
   const { width = 1200, height = 630, siteName, render } = options;
@@ -27,7 +36,18 @@ export function createOgImageHandler(blog: Blog, options: OgImageOptions = {}) {
     { params }: { params: Promise<{ slug: string }> },
   ) {
     const { slug } = await params;
-    const post = await blog.getPostBySlug(slug);
+    let post: Awaited<ReturnType<Blog['getPostBySlug']>>;
+    try {
+      post = await blog.getPostBySlug(slug);
+    } catch (err) {
+      if (isPostNotFound(err)) {
+        return new Response('Not found', {
+          status: 404,
+          headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+        });
+      }
+      throw err;
+    }
 
     const element = render
       ? render(post)
