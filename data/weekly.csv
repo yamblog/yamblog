@@ -4,3 +4,8 @@ date,package,last_week,last_month,dependent_repos,dependent_packages,stars,forks
 2026-11-20,@yamblog/react,4,25,0,0,1,0
 2026-11-20,@yamblog/next,32,135,0,0,1,0
 2026-11-20,@yamblog/astro,3,32,0,0,1,0
+2026-11-23,@yamblog/core,359,596,0,0,1,0
+2026-11-23,@yamblog/remark,211,240,0,0,1,0
+2026-11-23,@yamblog/react,199,220,0,0,1,0
+2026-11-23,@yamblog/next,268,382,0,0,1,0
+2026-11-23,@yamblog/astro,199,228,0,0,1,0
